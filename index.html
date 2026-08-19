@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agentic AI — Full Loop with Risk Gate</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=DM+Sans:wght@300;400;500;700;900&display=swap"
+    rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0c10;
+      --bg2: #12131a;
+      --bg3: #191a22;
+      --bg4: #21222c;
+      --fg: #ebe9e3;
+      --fg2: #a5a29a;
+      --fg3: #5e5c56;
+      --fg4: #38362f;
+      --ac: #e4a61f;
+      --ac2: #b8840f;
+      --acG: rgba(228, 166, 31, .12);
+      --pu: #b87cff;
+      --puG: rgba(184, 124, 255, .1);
+      --rd: #f06858;
+      --rdG: rgba(240, 104, 88, .1);
+      --cy: #4ec8ee;
+      --cyG: rgba(78, 200, 238, .08);
+      --gn: #3cd888;
+      --gnG: rgba(60, 216, 136, .1);
+      --ng: #dd0031;
+      --ngG: rgba(221, 0, 49, .12);
+      --or: #f09838;
+      --orG: rgba(240, 152, 56, .1);
+      --bdr: #26272f;
+      --bdr2: #34353e;
+      --r: 10px;
+      --rs: 6px;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'DM Sans', sans-serif;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--sans);
+      min-height: 100vh;
+      overflow-x: hidden
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse 55% 45% at 15% 8%, rgba(228, 166, 31, .035), transparent),
+        radial-gradient(ellipse 45% 35% at 85% 85%, rgba(78, 200, 238, .025), transparent);
+      pointer-events: none;
+      z-index: 0
+    }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: .022;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 128px
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 18px 22px 48px
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0 24px;
+      border-bottom: 1px solid var(--bdr);
+      margin-bottom: 24px
+    }
+
+    .hl {
+      display: flex;
+      align-items: center;
+      gap: 11px
+    }
+
+    .hi {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--ac), var(--ac2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--bg);
+      box-shadow: 0 0 22px var(--acG)
+    }
+
+    .ht h1 {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -.2px
+    }
+
+    .ht span {
+      font-size: 9.5px;
+      color: var(--fg3);
+      font-family: var(--mono);
+      letter-spacing: 1.2px;
+      text-transform: uppercase
+    }
+
+    .hb {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--gn);
+      background: var(--gnG);
+      border: 1px solid rgba(60, 216, 136, .18);
+      padding: 4px 11px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      gap: 5px
+    }
+
+    .hb .d {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--gn);
+      animation: bk 2s ease-in-out infinite
+    }
+
+    @keyframes bk {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .2
+      }
+    }
+
+    /* PIPELINE — 6 nodes */
+    .pipe {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 26px;
+      padding: 0 6px
+    }
+
+    .pn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      flex: 0 0 auto;
+      width: 88px;
+      position: relative;
+      z-index: 2
+    }
+
+    .pi {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      border: 1.5px solid var(--bdr);
+      background: var(--bg3);
+      transition: all .35s ease;
+      position: relative;
+      cursor: default
+    }
+
+    .pi.on {
+      transform: scale(1.14)
+    }
+
+    .pi.on::after {
+      content: '';
+      position: absolute;
+      inset: -5px;
+      border-radius: 15px;
+      border: 1.5px solid currentColor;
+      opacity: .22;
+      animation: pr 1.3s ease-in-out infinite
+    }
+
+    @keyframes pr {
+
+      0%,
+      100% {
+        opacity: .08;
+        transform: scale(1)
+      }
+
+      50% {
+        opacity: .3;
+        transform: scale(1.06)
+      }
+    }
+
+    .pi.ch {
+      color: var(--ac)
+    }
+
+    .pi.on.ch {
+      border-color: var(--ac);
+      box-shadow: 0 0 26px var(--acG)
+    }
+
+    .pi.pl {
+      color: var(--pu)
+    }
+
+    .pi.on.pl {
+      border-color: var(--pu);
+      box-shadow: 0 0 26px var(--puG)
+    }
+
+    .pi.be {
+      color: var(--rd)
+    }
+
+    .pi.on.be {
+      border-color: var(--rd);
+      box-shadow: 0 0 26px var(--rdG)
+    }
+
+    .pi.st {
+      color: var(--cy)
+    }
+
+    .pi.on.st {
+      border-color: var(--cy);
+      box-shadow: 0 0 26px var(--cyG)
+    }
+
+    .pi.ng {
+      color: var(--ng)
+    }
+
+    .pi.on.ng {
+      border-color: var(--ng);
+      box-shadow: 0 0 26px var(--ngG)
+    }
+
+    .pi.rg {
+      color: var(--or)
+    }
+
+    .pi.on.rg {
+      border-color: var(--or);
+      box-shadow: 0 0 26px var(--orG)
+    }
+
+    .plbl {
+      font-size: 9px;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .9px;
+      color: var(--fg3);
+      text-align: center;
+      line-height: 1.3
+    }
+
+    .plbl b {
+      color: var(--fg2);
+      font-weight: 600;
+      display: block;
+      font-size: 10px
+    }
+
+    .pc {
+      flex: 1;
+      height: 2px;
+      margin-top: 23px;
+      background: var(--bdr);
+      position: relative;
+      overflow: hidden;
+      min-width: 16px
+    }
+
+    .pc::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, var(--ac), transparent);
+      transform: translateX(-100%);
+      opacity: 0
+    }
+
+    .pc.go::after {
+      animation: pf .65s ease forwards
+    }
+
+    @keyframes pf {
+      0% {
+        transform: translateX(-100%);
+        opacity: 0
+      }
+
+      20% {
+        opacity: 1
+      }
+
+      100% {
+        transform: translateX(100%);
+        opacity: 0
+      }
+    }
+
+    /* GRID */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 18px
+    }
+
+    .card {
+      background: var(--bg3);
+      border: 1px solid var(--bdr);
+      border-radius: var(--r);
+      overflow: hidden
+    }
+
+    .chd {
+      padding: 11px 15px;
+      border-bottom: 1px solid var(--bdr);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600
+    }
+
+    .chd i {
+      font-size: 12px;
+      opacity: .45
+    }
+
+    .chd .cd {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0
+    }
+
+    .cb {
+      padding: 14px
+    }
+
+    /* CHAT */
+    .chat {
+      display: flex;
+      flex-direction: column
+    }
+
+    .ms {
+      flex: 1;
+      min-height: 280px;
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--bdr) transparent
+    }
+
+    .ms::-webkit-scrollbar {
+      width: 3px
+    }
+
+    .ms::-webkit-scrollbar-thumb {
+      background: var(--bdr);
+      border-radius: 3px
+    }
+
+    .m {
+      display: flex;
+      gap: 8px;
+      animation: mi .22s ease
+    }
+
+    @keyframes mi {
+      from {
+        opacity: 0;
+        transform: translateY(5px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .ma {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700
+    }
+
+    .m.hu .ma {
+      background: var(--acG);
+      color: var(--ac);
+      border: 1px solid rgba(228, 166, 31, .22)
+    }
+
+    .m.ai .ma {
+      background: var(--puG);
+      color: var(--pu);
+      border: 1px solid rgba(184, 124, 255, .18)
+    }
+
+    .m.sy .ma {
+      background: var(--cyG);
+      color: var(--cy);
+      border: 1px solid rgba(78, 200, 238, .18)
+    }
+
+    .m.ok .ma {
+      background: var(--gnG);
+      color: var(--gn);
+      border: 1px solid rgba(60, 216, 136, .18)
+    }
+
+    .m.bl .ma {
+      background: var(--orG);
+      color: var(--or);
+      border: 1px solid rgba(240, 152, 56, .18)
+    }
+
+    .m.rf .ma {
+      background: var(--rdG);
+      color: var(--rd);
+      border: 1px solid rgba(240, 104, 88, .18)
+    }
+
+    .mc {
+      flex: 1;
+      font-size: 12.5px;
+      line-height: 1.6
+    }
+
+    .mc .lb {
+      font-size: 9px;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .7px;
+      margin-bottom: 2px;
+      opacity: .4
+    }
+
+    .m.sy .mc {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--cy)
+    }
+
+    .m.ok .mc {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--gn)
+    }
+
+    .m.bl .mc {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--or)
+    }
+
+    .m.rf .mc {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--rd)
+    }
+
+    .cin {
+      padding: 11px 15px;
+      border-top: 1px solid var(--bdr);
+      display: flex;
+      gap: 8px
+    }
+
+    .ci {
+      flex: 1;
+      background: var(--bg2);
+      border: 1.5px solid var(--bdr);
+      border-radius: 8px;
+      padding: 9px 12px;
+      color: var(--fg);
+      font-family: var(--sans);
+      font-size: 13px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s
+    }
+
+    .ci:focus {
+      border-color: var(--ac);
+      box-shadow: 0 0 0 3px var(--acG)
+    }
+
+    .ci::placeholder {
+      color: var(--fg4)
+    }
+
+    .ci:disabled {
+      opacity: .35
+    }
+
+    .cs {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      border: none;
+      background: linear-gradient(135deg, var(--ac), var(--ac2));
+      color: var(--bg);
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform .1s, box-shadow .2s
+    }
+
+    .cs:hover:not(:disabled) {
+      transform: scale(1.08);
+      box-shadow: 0 0 22px var(--acG)
+    }
+
+    .cs:active:not(:disabled) {
+      transform: scale(.94)
+    }
+
+    .cs:disabled {
+      opacity: .3;
+      cursor: not-allowed
+    }
+
+    /* SIDEBAR */
+    .side {
+      display: flex;
+      flex-direction: column;
+      gap: 14px
+    }
+
+    /* TOOLS */
+    .tg {
+      display: flex;
+      flex-direction: column;
+      gap: 6px
+    }
+
+    .tc {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 10px;
+      border-radius: var(--rs);
+      background: var(--bg2);
+      border: 1px solid var(--bdr);
+      transition: all .3s ease;
+      opacity: .3
+    }
+
+    .tc.sel {
+      opacity: 1;
+      border-color: var(--pu);
+      background: rgba(184, 124, 255, .04)
+    }
+
+    .tc.run {
+      opacity: 1;
+      border-color: var(--rd)
+    }
+
+    .tc.dn {
+      opacity: 1;
+      border-color: var(--gn)
+    }
+
+    .ti {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      background: var(--bg3)
+    }
+
+    .tc.sel .ti {
+      color: var(--pu)
+    }
+
+    .tc.run .ti {
+      color: var(--rd);
+      animation: tsp .7s linear infinite
+    }
+
+    .tc.dn .ti {
+      color: var(--gn)
+    }
+
+    @keyframes tsp {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .tf {
+      flex: 1
+    }
+
+    .tn {
+      font-size: 11px;
+      font-weight: 600
+    }
+
+    .td {
+      font-size: 9px;
+      color: var(--fg3);
+      font-family: var(--mono)
+    }
+
+    .ts {
+      font-size: 9px;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .5px
+    }
+
+    .tc.sel .ts {
+      color: var(--pu)
+    }
+
+    .tc.run .ts {
+      color: var(--rd)
+    }
+
+    .tc.dn .ts {
+      color: var(--gn)
+    }
+
+    .ap {
+      height: 3px;
+      background: var(--bdr);
+      border-radius: 2px;
+      margin-top: 7px;
+      overflow: hidden;
+      display: none
+    }
+
+    .ap.v {
+      display: block
+    }
+
+    .ab {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--rd), var(--ac));
+      border-radius: 2px;
+      transition: width .3s ease
+    }
+
+    /* PLAN BOX */
+    .plan-box {
+      background: var(--bg2);
+      border: 1px solid rgba(184, 124, 255, .15);
+      border-radius: var(--rs);
+      padding: 10px 12px;
+      font-family: var(--mono);
+      font-size: 10.5px;
+      color: var(--pu);
+      line-height: 1.7;
+      margin-top: 8px;
+      display: none
+    }
+
+    .plan-box.v {
+      display: block;
+      animation: mi .3s ease
+    }
+
+    .plan-box .pl-step {
+      padding: 2px 0;
+      display: flex;
+      gap: 6px;
+      align-items: flex-start
+    }
+
+    .plan-box .pl-num {
+      color: var(--fg3);
+      flex-shrink: 0;
+      min-width: 16px
+    }
+
+    .plan-box .pl-active {
+      color: var(--fg);
+      font-weight: 500
+    }
+
+    /* STREAM LOG */
+    .sl {
+      font-family: var(--mono);
+      font-size: 10px;
+      line-height: 1.8;
+      max-height: 160px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--bdr) transparent
+    }
+
+    .sl::-webkit-scrollbar {
+      width: 3px
+    }
+
+    .sl::-webkit-scrollbar-thumb {
+      background: var(--bdr);
+      border-radius: 3px
+    }
+
+    .sll {
+      animation: sli .12s ease;
+      white-space: pre-wrap;
+      word-break: break-all
+    }
+
+    @keyframes sli {
+      from {
+        opacity: 0
+      }
+
+      to {
+        opacity: 1
+      }
+    }
+
+    .slt {
+      color: var(--fg4)
+    }
+
+    .slg {
+      font-weight: 600
+    }
+
+    .slg.gp {
+      color: var(--pu)
+    }
+
+    .slg.gb {
+      color: var(--rd)
+    }
+
+    .slg.gs {
+      color: var(--cy)
+    }
+
+    .slg.gn {
+      color: var(--ng)
+    }
+
+    .slg.gk {
+      color: var(--gn)
+    }
+
+    .slg.gh {
+      color: var(--ac)
+    }
+
+    .slg.gr {
+      color: var(--or)
+    }
+
+    .slm {
+      color: var(--fg3)
+    }
+
+    /* GATE */
+    .gate {
+      min-height: 120px
+    }
+
+    .gp {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 110px;
+      color: var(--fg4);
+      font-size: 11px;
+      gap: 6px
+    }
+
+    .gp i {
+      font-size: 20px;
+      opacity: .2
+    }
+
+    .dp {
+      animation: gi .3s ease
+    }
+
+    @keyframes gi {
+      from {
+        opacity: 0;
+        transform: translateY(8px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .dh {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+      padding-bottom: 7px;
+      border-bottom: 1px solid var(--bdr)
+    }
+
+    .dh .ns {
+      width: 16px;
+      height: 16px;
+      background: var(--ng);
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      font-weight: 900;
+      color: #fff
+    }
+
+    .dh span {
+      font-size: 9.5px;
+      font-family: var(--mono);
+      color: var(--fg3)
+    }
+
+    .df {
+      margin-bottom: 7px
+    }
+
+    .df label {
+      display: block;
+      font-size: 9px;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      color: var(--fg4);
+      margin-bottom: 2px
+    }
+
+    .dv {
+      padding: 6px 8px;
+      background: var(--bg2);
+      border: 1px solid var(--bdr);
+      border-radius: var(--rs);
+      font-size: 12px;
+      color: var(--fg);
+      line-height: 1.45;
+      min-height: 30px
+    }
+
+    .dv.tp {
+      border-color: var(--cy);
+      background: linear-gradient(90deg, var(--bg2), rgba(78, 200, 238, .025), var(--bg2));
+      background-size: 200% 100%;
+      animation: tsh 1s ease infinite
+    }
+
+    @keyframes tsh {
+      0% {
+        background-position: 200% 0
+      }
+
+      100% {
+        background-position: -200% 0
+      }
+    }
+
+    .dv.tp::after {
+      content: '\2588';
+      animation: cb .5s step-end infinite;
+      color: var(--cy);
+      font-size: 10px
+    }
+
+    @keyframes cb {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0
+      }
+    }
+
+    .ga {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid var(--bdr)
+    }
+
+    .btn {
+      flex: 1;
+      padding: 7px 10px;
+      border-radius: var(--rs);
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px
+    }
+
+    .bok {
+      background: var(--gn);
+      color: var(--bg);
+      border-color: var(--gn)
+    }
+
+    .bok:hover:not(:disabled) {
+      box-shadow: 0 0 18px var(--gnG);
+      transform: translateY(-1px)
+    }
+
+    .bno {
+      background: transparent;
+      color: var(--rd);
+      border-color: var(--bdr)
+    }
+
+    .bno:hover:not(:disabled) {
+      border-color: var(--rd);
+      background: var(--rdG)
+    }
+
+    .btn:disabled {
+      opacity: .2;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important
+    }
+
+    /* RISK GATE RESULT */
+    .rg-result {
+      animation: gi .35s ease;
+      padding: 4px 0
+    }
+
+    .rg-pass {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 0
+    }
+
+    .rg-ico {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px
+    }
+
+    .rg-ico.pass {
+      background: var(--gnG);
+      border: 1px solid rgba(60, 216, 136, .22);
+      color: var(--gn)
+    }
+
+    .rg-ico.block {
+      background: var(--orG);
+      border: 1px solid rgba(240, 152, 56, .22);
+      color: var(--or)
+    }
+
+    .rg-ico.refuse {
+      background: var(--rdG);
+      border: 1px solid rgba(240, 104, 88, .22);
+      color: var(--rd)
+    }
+
+    .rg-t {
+      font-size: 12px;
+      font-weight: 700
+    }
+
+    .rg-s {
+      font-size: 10px;
+      color: var(--fg3);
+      font-family: var(--mono);
+      text-align: center;
+      line-height: 1.5;
+      max-width: 280px
+    }
+
+    .rg-reason {
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: var(--bg2);
+      border: 1px solid var(--bdr);
+      border-radius: var(--rs);
+      font-family: var(--mono);
+      font-size: 10.5px;
+      line-height: 1.6
+    }
+
+    .rg-reason.block {
+      border-color: rgba(240, 152, 56, .2);
+      color: var(--or)
+    }
+
+    .rg-reason.refuse {
+      border-color: rgba(240, 104, 88, .2);
+      color: var(--rd)
+    }
+
+    .rg-reason .ri {
+      margin-right: 5px;
+      opacity: .6
+    }
+
+    /* STATUS */
+    .sb {
+      margin-top: 18px;
+      padding: 9px 14px;
+      background: var(--bg3);
+      border: 1px solid var(--bdr);
+      border-radius: var(--r);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--fg3)
+    }
+
+    .sd {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--fg4);
+      flex-shrink: 0
+    }
+
+    .sd.idle {
+      background: var(--fg4)
+    }
+
+    .sd.act {
+      background: var(--ac);
+      animation: sp 1s ease-in-out infinite
+    }
+
+    .sd.dn {
+      background: var(--gn)
+    }
+
+    @keyframes sp {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .15
+      }
+    }
+
+    /* TOAST */
+    .tw {
+      position: fixed;
+      bottom: 18px;
+      right: 18px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 6px
+    }
+
+    .tst {
+      padding: 8px 14px;
+      border-radius: 7px;
+      font-size: 11px;
+      font-weight: 500;
+      animation: ti .22s ease, to .22s ease 2.8s forwards;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 6px 28px rgba(0, 0, 0, .5)
+    }
+
+    .tst.tok {
+      background: #142a1c;
+      color: var(--gn);
+      border: 1px solid rgba(60, 216, 136, .15)
+    }
+
+    .tst.tno {
+      background: #2a1616;
+      color: var(--rd);
+      border: 1px solid rgba(240, 104, 88, .15)
+    }
+
+    .tst.tin {
+      background: #14202a;
+      color: var(--cy);
+      border: 1px solid rgba(78, 200, 238, .15)
+    }
+
+    .tst.tor {
+      background: #2a2014;
+      color: var(--or);
+      border: 1px solid rgba(240, 152, 56, .15)
+    }
+
+    @keyframes ti {
+      from {
+        opacity: 0;
+        transform: translateY(8px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    @keyframes to {
+      to {
+        opacity: 0;
+        transform: translateY(-5px)
+      }
+    }
+
+    @media(max-width:960px) {
+      .grid {
+        grid-template-columns: 1fr
+      }
+
+      .pn {
+        width: 68px
+      }
+
+      .pi {
+        width: 38px;
+        height: 38px;
+        font-size: 13px;
+        border-radius: 9px
+      }
+
+      .plbl {
+        font-size: 7.5px
+      }
+
+      .plbl b {
+        font-size: 8px
+      }
+    }
+
+    @media(max-width:560px) {
+      .app {
+        padding: 10px 8px 32px
+      }
+
+      .pn {
+        width: 48px
+      }
+
+      .pi {
+        width: 32px;
+        height: 32px;
+        font-size: 11px;
+        border-radius: 7px
+      }
+
+      .plbl span {
+        display: none
+      }
+
+      .plbl b {
+        font-size: 7px
+      }
+    }
+
+    @media(prefers-reduced-motion:reduce) {
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="noise"></div>
+  <div class="app">
+
+    <header>
+      <div class="hl">
+        <div class="hi">Ag</div>
+        <div class="ht">
+          <h1>Agentic Loop</h1><span>Plan &middot; MCP &middot; AG-UI &middot; Risk Gate</span>
+        </div>
+      </div>
+      <div class="hb"><span class="d"></span>Agent Online</div>
+    </header>
+
+    <!-- PIPELINE: 6 nodes -->
+    <nav class="pipe" id="pipe" aria-label="Agent pipeline">
+      <div class="pn">
+        <div class="pi ch" id="p0"><i class="fas fa-user"></i></div>
+        <div class="plbl"><b>Human</b><span>Request</span></div>
+      </div>
+      <div class="pc" id="c0"></div>
+      <div class="pn">
+        <div class="pi pl" id="p1"><i class="fas fa-brain"></i></div>
+        <div class="plbl"><b>Agent</b><span>Plan LLM</span></div>
+      </div>
+      <div class="pc" id="c1"></div>
+      <div class="pn">
+        <div class="pi be" id="p2"><i class="fas fa-server"></i></div>
+        <div class="plbl"><b>Backend</b><span>MCP + Services</span></div>
+      </div>
+      <div class="pc" id="c2"></div>
+      <div class="pn">
+        <div class="pi st" id="p3"><i class="fas fa-bolt"></i></div>
+        <div class="plbl"><b>AG-UI</b><span>Stream</span></div>
+      </div>
+      <div class="pc" id="c3"></div>
+      <div class="pn">
+        <div class="pi ng" id="p4"><i class="fas fa-shield-halved"></i></div>
+        <div class="plbl"><b>Angular</b><span>Render Gate</span></div>
+      </div>
+      <div class="pc" id="c4"></div>
+      <div class="pn">
+        <div class="pi rg" id="p5"><i class="fas fa-triangle-exclamation"></i></div>
+        <div class="plbl"><b>Risk Gate</b><span>Pass/Block/Refuse</span></div>
+      </div>
+    </nav>
+
+    <div class="grid">
+      <!-- CHAT -->
+      <div class="card chat">
+        <div class="chd"><i class="fas fa-comments"></i>Agent Interface</div>
+        <div class="ms" id="ms" role="log" aria-live="polite"></div>
+        <div class="cin">
+          <input class="ci" id="ci" type="text" placeholder='Type anything and press Enter or click the arrow...'
+            aria-label="Chat input" autocomplete="off">
+          <button class="cs" id="cs" aria-label="Send message"><i class="fas fa-arrow-up"></i></button>
+        </div>
+      </div>
+
+      <!-- SIDEBAR -->
+      <aside class="side">
+        <!-- PLAN -->
+        <div class="card">
+          <div class="chd"><i class="fas fa-brain"></i>Agent Plan</div>
+          <div class="cb">
+            <div class="plan-box" id="planBox"></div>
+            <div id="planPlaceholder" style="color:var(--fg4);font-size:11px;text-align:center;padding:8px 0"><i
+                class="fas fa-brain" style="opacity:.2;font-size:16px;display:block;margin-bottom:4px"></i>Waiting for
+              agent planning...</div>
+          </div>
+        </div>
+
+        <!-- TOOLS -->
+        <div class="card">
+          <div class="chd"><i class="fas fa-toolbox"></i>MCP Tools</div>
+          <div class="cb">
+            <div class="tg" id="tgrid">
+              <div class="tc" id="t0">
+                <div class="ti"><i class="fas fa-file-lines"></i></div>
+                <div class="tf">
+                  <div class="tn">document_parser</div>
+                  <div class="td">Extract structure</div>
+                </div>
+                <div class="ts" id="s0">idle</div>
+              </div>
+              <div class="tc" id="t1">
+                <div class="ti"><i class="fas fa-pen-nib"></i></div>
+                <div class="tf">
+                  <div class="tn">content_drafter</div>
+                  <div class="td">Generate text</div>
+                </div>
+                <div class="ts" id="s1">idle</div>
+              </div>
+              <div class="tc" id="t2">
+                <div class="ti"><i class="fas fa-check-double"></i></div>
+                <div class="tf">
+                  <div class="tn">schema_validator</div>
+                  <div class="td">Verify compliance</div>
+                </div>
+                <div class="ts" id="s2">idle</div>
+              </div>
+            </div>
+            <div class="ap" id="ap">
+              <div class="ab" id="ab"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STREAM LOG -->
+        <div class="card" style="flex:1">
+          <div class="chd">
+            <div class="cd" style="background:var(--cy)"></div>AG-UI Stream
+          </div>
+          <div class="cb">
+            <div class="sl" id="slog" role="log" aria-label="Stream log"></div>
+          </div>
+        </div>
+
+        <!-- GATE -->
+        <div class="card gate" id="gate">
+          <div class="chd">
+            <div class="ns"
+              style="width:14px;height:14px;font-size:7px;border-radius:3px;background:var(--ng);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900">
+              A</div>Angular Gate + Risk Result
+          </div>
+          <div class="cb" id="gb">
+            <div class="gp"><i class="fas fa-shield-halved"></i><span>Waiting for stream...</span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="sb">
+      <div class="sd idle" id="sd"></div><span id="stx">Idle</span><span style="margin-left:auto;opacity:.25">loop
+        v2.0</span>
+    </div>
+  </div>
+  <div class="tw" id="tw"></div>
+
+  <script>
+    /* ── DOM refs ── */
+    const $=id => document.getElementById(id);
+    const ms=$('ms'),ci=$('ci'),cs=$('cs'),slog=$('slog'),gb=$('gb');
+    const sd=$('sd'),stx=$('stx'),ap=$('ap'),ab=$('ab'),tw=$('tw');
+    const planBox=$('planBox'),planPH=$('planPlaceholder');
+    const pIds=['p0','p1','p2','p3','p4','p5'],cIds=['c0','c1','c2','c3','c4'];
+    const tIds=['t0','t1','t2'],sIds=['s0','s1','s2'];
+    const tNames=['document_parser','content_drafter','schema_validator'];
+
+    let busy=false,loopDone=false;
+
+    /* ── Helpers ── */
+    const W=ms => new Promise(r => setTimeout(r,ms));
+    function now() {const d=new Date(); return d.toTimeString().split(' ')[0]+'.'+String(d.getMilliseconds()).padStart(3,'0')}
+
+    function lg(tag,cls,msg) {
+      const l=document.createElement('div'); l.className='sll';
+      l.innerHTML=`<span class="slt">${now()}</span> <span class="slg ${cls}">[${tag}]</span> <span class="slm">${msg}</span>`;
+      slog.appendChild(l); slog.scrollTop=slog.scrollHeight;
+    }
+
+    function mg(type,text) {
+      const av={hu: 'H',ai: 'AI',sy: '<i class="fas fa-terminal" style="font-size:9px"></i>',ok: '<i class="fas fa-check" style="font-size:9px"></i>',bl: '<i class="fas fa-lock" style="font-size:9px"></i>',rf: '<i class="fas fa-ban" style="font-size:9px"></i>'};
+      const lb={hu: 'You',ai: 'Agent',sy: 'System',ok: 'Filed',bl: 'Blocked',rf: 'Refused'};
+      const d=document.createElement('div'); d.className=`m ${type}`;
+      d.innerHTML=`<div class="ma">${av[type]}</div><div class="mc"><div class="lb">${lb[type]}</div>${text}</div>`;
+      ms.appendChild(d); ms.scrollTop=ms.scrollHeight;
+    }
+
+    function toast(cls,text,ico) {
+      const t=document.createElement('div'); t.className=`tst ${cls}`;
+      t.innerHTML=`<i class="fas fa-${ico||'info-circle'}"></i>${text}`;
+      tw.appendChild(t); setTimeout(() => t.remove(),3200);
+    }
+
+    function setPipe(i) {
+      pIds.forEach((id,j) => {const e=$(id); j===i? e.classList.add('on'):e.classList.remove('on')});
+      if(i>0) {const c=$(cIds[i-1]); if(c) {c.classList.remove('go'); void c.offsetWidth; c.classList.add('go')} }
+    }
+    function clearPipe() {pIds.forEach(id => $(id).classList.remove('on'))}
+
+    function setTool(i,st) {
+      const c=$(tIds[i]),s=$(sIds[i]); c.className='tc';
+      if(st==='sel') {c.classList.add('sel'); s.textContent='queued'}
+      else if(st==='run') {c.classList.add('run'); s.textContent='running'}
+      else if(st==='dn') {c.classList.add('dn'); s.textContent='done'}
+      else {s.textContent='idle'}
+    }
+    function resetTools() {tIds.forEach((_,i) => setTool(i,'')); ap.classList.remove('v'); ab.style.width='0%'}
+
+    function setStatus(t,txt) {sd.className='sd '+t; stx.textContent=txt}
+
+    /* ── Plan display ── */
+    const planSteps=['Parse raw input structure','Select MCP tools (3 needed)','Execute deterministic pipeline','Stream results via AG-UI','Render in Angular for review','Run risk gate before filing'];
+    function showPlan(activeIdx) {
+      planPH.style.display='none'; planBox.classList.add('v');
+      planBox.innerHTML=planSteps.map((s,i) =>
+        `<div class="pl-step"><span class="pl-num">${i+1}.</span><span class="${i<=activeIdx? 'pl-active':''}">${s}</span></div>`
+      ).join('');
+    }
+
+    /* ── Typing ── */
+    async function typ(elId,text,speed) {
+      const el=$(elId); if(!el) return;
+      for(let i=0;i<text.length;i++) {el.textContent+=text[i]; await W(speed)}
+      el.classList.remove('tp');
+    }
+
+    /* ── Document bank ── */
+    const docs=[
+      {title: 'Project Brief — Q4 Migration',summary: 'Migration path from monolith to microservices: timeline, risks, resource allocation for 3 teams.',details: 'Phase 1: Service extraction (4w). Phase 2: API gateway (2w). Phase 3: Data layer (3w). Rollback per phase. Sign-off by Oct 15.',schema: 'ISO-19650:2022'},
+      {title: 'Incident Report — Auth Outage',summary: 'Authentication service interruption Sept 28: root cause, affected users, remediation steps.',details: 'Root cause: Expired TLS cert on internal CA. 12,400 users affected over 47 min. Fix: cert-manager auto-renewal. Post-mortem Oct 2.',schema: 'ITIL v4'},
+      {title: 'Feature Spec — Notification System',summary: 'WebSocket notification system: event types, delivery guarantees, fallback mechanisms.',details: 'Transport: WS + SSE fallback. 14 event types. At-least-once delivery with client dedup. Redis pub/sub with horizontal consumer groups.',schema: 'OpenAPI 3.1 async'}
+    ];
+
+    /* Risk gate outcomes — rotates through all three */
+    let riskIdx=0;
+    const riskOutcomes=[
+      {type: 'pass',icon: 'check',cls: 'pass',label: 'Risk Gate: PASSED',detail: 'All checks passed. Confidence: 94%. No missing fields. Document filed.',toastCls: 'tok',toastIco: 'check-circle',toastMsg: 'Risk gate passed — filed'},
+      {type: 'block',icon: 'lock',cls: 'block',label: 'Risk Gate: BLOCKED',detail: 'Cannot file. Missing: supervisor approval signature. Confidence: 62% (threshold: 85%). Document returned for revision.',reason: 'BLOCK REASON:\n> Missing field: approved_by (supervisor)\n> Confidence score: 62% — below 85% threshold\n> Required action: obtain supervisor sign-off\n> Document status: returned to draft',toastCls: 'tor',toastIco: 'lock',toastMsg: 'Blocked — missing info'},
+      {type: 'refuse',icon: 'ban',cls: 'refuse',label: 'Risk Gate: REFUSED',detail: 'Facts extracted and logged. No treatment or document generation permitted for this input classification.',reason: 'REFUSE REASON:\n> Input classified: unverified third-party claim\n> Policy: facts-only mode for unverified sources\n> Action: raw data logged to audit trail\n> No document generated. No treatment applied.',toastCls: 'tno',toastIco: 'ban',toastMsg: 'Refused — facts only, no treatment'}
+    ];
+
+    /* ════════════════════════════════════════════
+       THE FULL LOOP
+       ════════════════════════════════════════════ */
+    async function run(input) {
+      if(busy||loopDone) return;
+      busy=true; cs.disabled=true; ci.disabled=true;
+
+      const doc=docs[Math.floor(Math.random()*docs.length)];
+      const risk=riskOutcomes[riskIdx%3]; riskIdx++;
+
+      // Reset UI
+      gb.innerHTML='<div class="gp"><i class="fas fa-shield-halved"></i><span>Waiting for stream...</span></div>';
+      planPH.style.display=''; planBox.classList.remove('v'); planBox.innerHTML='';
+
+      /* ── 1. HUMAN ── */
+      mg('hu',input);
+      setPipe(0); setStatus('act','Human: request received');
+      lg('HUMAN','gh',`"${input}"`);
+      await W(450);
+
+      /* ── 2. AGENT PLAN (LLM) ── */
+      setPipe(1); setStatus('act','Agent: LLM planning...');
+      lg('AGENT','gp','reasoning: intent=prepare_document');
+      mg('sy','Agent is planning the execution sequence...');
+      await W(350);
+      showPlan(-1); // show all steps dimmed
+
+      // Animate plan steps lighting up
+      for(let i=0;i<planSteps.length;i++) {
+        showPlan(i);
+        lg('AGENT','gp',`step ${i+1}: ${planSteps[i]}`);
+        await W(220);
+      }
+      mg('ai','Plan ready. Calling <strong>3 MCP tools</strong> on the backend, then streaming results for Angular render.');
+      await W(350);
+
+      /* ── 3. BACKEND: MCP + domain services ── */
+      setPipe(2); setStatus('act','Backend: executing MCP tools...');
+      lg('MCP','gb','tool_selection intent=prepare');
+      ap.classList.add('v');
+
+      for(let i=0;i<3;i++) {setTool(i,'sel'); lg('MCP','gb',`queue: ${tNames[i]}`); await W(250)}
+
+      // Execute each tool
+      setTool(0,'run'); lg('API','gb','exec document_parser'); ab.style.width='14%';
+      await W(600); setTool(0,'dn'); lg('API','gk','document_parser → 4 fields'); ab.style.width='32%'; await W(200);
+
+      setTool(1,'run'); lg('API','gb','exec content_drafter'); ab.style.width='56%';
+      await W(750); setTool(1,'dn'); lg('API','gk','content_drafter → 247 tokens'); ab.style.width='76%'; await W(200);
+
+      setTool(2,'run'); lg('API','gb',`exec schema_validator "${doc.schema}"`); ab.style.width='90%';
+      await W(500); setTool(2,'dn'); lg('API','gk','schema_validator → PASSED'); ab.style.width='100%'; await W(300);
+
+      mg('sy','Backend complete. All 3 tools returned results. Initiating AG-UI stream...');
+      await W(250);
+
+      /* ── 4. AG-UI STREAM ── */
+      setPipe(3); setStatus('act','AG-UI: streaming to frontend...');
+      lg('AG-UI','gs','event: text-stream-start'); await W(120);
+      lg('AG-UI','gs','event: tool-result document_parser'); await W(100);
+      lg('AG-UI','gs','event: tool-result content_drafter'); await W(100);
+      lg('AG-UI','gs','event: tool-result schema_validator'); await W(100);
+      lg('AG-UI','gs','event: state-snapshot (renderable)'); await W(100);
+      lg('AG-UI','gs','event: please-confirm required=true'); await W(200);
+
+      /* ── 5. ANGULAR: RENDER + ASK ── */
+      setPipe(4); setStatus('act','Angular: render gate — awaiting human confirm');
+      lg('ANGULAR','gn','changeDetection → render-gate');
+      lg('ANGULAR','gn','Gate OPEN — confirm required');
+
+      gb.innerHTML=`
+    <div class="dp">
+      <div class="dh"><div class="ns">A</div><span>Rendered by Angular — awaiting confirmation</span></div>
+      <div class="df"><label>Title</label><div class="dv tp" id="f0"></div></div>
+      <div class="df"><label>Summary</label><div class="dv tp" id="f1"></div></div>
+      <div class="df"><label>Details</label><div class="dv tp" id="f2"></div></div>
+      <div class="df"><label>Schema</label><div class="dv" id="f3" style="color:var(--gn)"></div></div>
+      <div class="ga">
+        <button class="btn bno" id="bno" disabled><i class="fas fa-xmark"></i> Reject</button>
+        <button class="btn bok" id="bok" disabled><i class="fas fa-check"></i> Confirm</button>
+      </div>
+    </div>`;
+
+      await typ('f0',doc.title,20);
+      await typ('f1',doc.summary,12);
+      await typ('f2',doc.details,8);
+      const f3=$('f3'); if(f3) f3.innerHTML=`<i class="fas fa-circle-check" style="margin-right:4px"></i>${doc.schema}`;
+
+      const bok=$('bok'),bno=$('bno');
+      if(bok) bok.disabled=false; if(bno) bno.disabled=false;
+      mg('ai','Document rendered. <strong>Confirm</strong> to proceed to risk gate, or <strong>Reject</strong> to discard.');
+
+      // Wire buttons
+      if(bok) bok.onclick=() => proceedToRiskGate(doc,risk);
+      if(bno) bno.onclick=() => userReject();
+    }
+
+    /* ── RISK GATE ── */
+    async function proceedToRiskGate(doc,risk) {
+      if(loopDone) return;
+
+      // Disable confirm/reject
+      const bok=$('bok'),bno=$('bno');
+      if(bok) bok.disabled=true; if(bno) bno.disabled=true;
+      if(bok) bok.innerHTML='<i class="fas fa-spinner fa-spin"></i> Checking...';
+
+      mg('sy','Human confirmed. Sending to <strong>risk gate</strong> on backend...');
+      setPipe(5); setStatus('act','Risk gate: evaluating...');
+      lg('RISK','gr','received: confirm=true → evaluating');
+      await W(400);
+      lg('RISK','gr','check: confidence_score'); await W(300);
+      lg('RISK','gr','check: required_fields_complete'); await W(300);
+      lg('RISK','gr','check: input_classification'); await W(300);
+      lg('RISK','gr',`result: ${risk.type.toUpperCase()}`);
+
+      await W(400);
+
+      // Render risk result inside the gate card
+      const existingDp=gb.querySelector('.dp');
+      if(existingDp) existingDp.remove();
+
+      const resultDiv=document.createElement('div');
+      resultDiv.className='rg-result';
+
+      let html=`
+    <div class="rg-pass">
+      <div class="rg-ico ${risk.cls}"><i class="fas fa-${risk.icon}"></i></div>
+      <div class="rg-t" style="color:var(--${risk.cls==='pass'? 'gn':risk.cls==='block'? 'or':'rd'})">${risk.label}</div>
+      <div class="rg-s">${risk.detail}</div>`;
+
+      if(risk.type!=='pass') {
+        html+=`<div class="rg-reason ${risk.cls}"><pre style="margin:0;white-space:pre-wrap;font-family:inherit">${risk.reason.split('\n').map(l => `<span class="ri">›</span> ${l}`).join('<br>')}</pre></div>`;
+      }
+
+      html+=`<button class="btn bok" style="margin-top:10px;flex:none;padding:7px 18px" onclick="resetLoop()"><i class="fas fa-rotate-right"></i> New Loop</button></div>`;
+      resultDiv.innerHTML=html;
+      gb.appendChild(resultDiv);
+
+      // Chat message
+      const msgType=risk.type==='pass'? 'ok':risk.type==='block'? 'bl':'rf';
+      mg(msgType,risk.detail);
+      toast(risk.toastCls,risk.toastMsg,risk.toastIco);
+
+      loopDone=true; busy=false;
+      setStatus(risk.type==='pass'? 'dn':'idle',risk.label);
+    }
+
+    function userReject() {
+      if(loopDone) return; loopDone=true; busy=false; clearPipe();
+      lg('GATE','gn','Human rejected — discarding');
+      mg('sy','Document discarded by human.');
+      toast('tno','Rejected','xmark-circle');
+      gb.innerHTML=`<div class="rg-pass"><div class="rg-ico refuse"><i class="fas fa-xmark"></i></div><div class="rg-t" style="color:var(--rd)">Rejected</div><div class="rg-s">Document discarded</div><button class="btn bno" style="margin-top:10px;flex:none;padding:7px 18px" onclick="resetLoop()"><i class="fas fa-rotate-right"></i> New Loop</button></div>`;
+      setStatus('idle','Rejected');
+    }
+
+    /* ── RESET ── */
+    function resetLoop() {
+      busy=false; loopDone=false; cs.disabled=false; ci.disabled=false; ci.focus();
+      resetTools(); clearPipe(); setStatus('idle','Idle — ready');
+      gb.innerHTML='<div class="gp"><i class="fas fa-shield-halved"></i><span>Waiting for stream...</span></div>';
+      planPH.style.display=''; planBox.classList.remove('v'); planBox.innerHTML='';
+      lg('SYS','gs','Loop reset — awaiting input');
+    }
+
+    /* ── SEND ── */
+    function send() {
+      const v=ci.value.trim();
+      if(!v) {return }  // don't send empty
+      if(busy||loopDone) {return }
+      ci.value='';
+      run(v);
+    }
+
+    cs.addEventListener('click',send);
+    ci.addEventListener('keydown',e => {if(e.key==='Enter'&&!e.shiftKey) {e.preventDefault(); send()} });
+
+    /* ── AUTO-DEMO: fires directly, no DOMContentLoaded needed ── */
+    lg('SYS','gs','Agent loop initialized');
+    lg('MCP','gb','3 tools registered');
+    lg('AG-UI','gn','Stream bound to Angular gate');
+    lg('RISK','gr','Risk gate armed (pass/block/refuse)');
+    mg('sy','Agent ready. Type anything or wait for auto-demo...');
+
+    setTimeout(() => {
+      if(!busy&&!loopDone) {
+        ci.value='Help me prepare this.';
+        ci.style.borderColor='var(--ac)';
+        ci.style.boxShadow='0 0 0 3px var(--acG)';
+        setTimeout(() => {
+          ci.style.borderColor='';
+          ci.style.boxShadow='';
+          send();
+        },700);
+      }
+    },1400);
+
+  </script>
+</body>
+
+</html>
