@@ -1,0 +1,1742 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agentic AI — Realistic Flow</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=DM+Sans:wght@300;400;500;700;900&display=swap"
+    rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0b0f;
+      --bg2: #111218;
+      --bg3: #181920;
+      --bg4: #1f2029;
+      --fg: #ebe8e0;
+      --fg2: #9f9c94;
+      --fg3: #5a5852;
+      --fg4: #33312c;
+      --ac: #dea51b;
+      --ac2: #b3840d;
+      --acG: rgba(222, 165, 27, .1);
+      --pu: #a870f0;
+      --puG: rgba(168, 112, 240, .08);
+      --rd: #e8605a;
+      --rdG: rgba(232, 96, 90, .08);
+      --cy: #48c4e8;
+      --cyG: rgba(72, 196, 232, .06);
+      --gn: #38d080;
+      --gnG: rgba(56, 208, 128, .08);
+      --ng: #dd0031;
+      --ngG: rgba(221, 0, 49, .1);
+      --or: #e89830;
+      --orG: rgba(232, 152, 48, .08);
+      --bdr: #24252d;
+      --bdr2: #30313a;
+      --r: 9px;
+      --rs: 5px;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'DM Sans', sans-serif
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--sans);
+      min-height: 100vh;
+      overflow-x: hidden
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse 50% 40% at 10% 5%, rgba(222, 165, 27, .03), transparent), radial-gradient(ellipse 40% 30% at 90% 90%, rgba(72, 196, 232, .02), transparent);
+      pointer-events: none;
+      z-index: 0
+    }
+
+    .nz {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: .02;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 128px
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      max-width: 1460px;
+      margin: 0 auto;
+      padding: 16px 20px 44px
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0 20px;
+      border-bottom: 1px solid var(--bdr);
+      margin-bottom: 20px
+    }
+
+    .hl {
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .hi {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--ac), var(--ac2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--bg);
+      box-shadow: 0 0 18px var(--acG)
+    }
+
+    .ht h1 {
+      font-size: 15px;
+      font-weight: 700
+    }
+
+    .ht span {
+      font-size: 9px;
+      color: var(--fg3);
+      font-family: var(--mono);
+      letter-spacing: 1px;
+      text-transform: uppercase
+    }
+
+    .hb {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      color: var(--gn);
+      background: var(--gnG);
+      border: 1px solid rgba(56, 208, 128, .15);
+      padding: 4px 10px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      gap: 5px
+    }
+
+    .hb .d {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--gn);
+      animation: bk 2s ease-in-out infinite
+    }
+
+    @keyframes bk {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .15
+      }
+    }
+
+    /* TRACE */
+    .trace {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 20px;
+      padding: 0 4px;
+      overflow-x: auto;
+      scrollbar-width: none
+    }
+
+    .trace::-webkit-scrollbar {
+      display: none
+    }
+
+    .ts {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-shrink: 0;
+      animation: tsi .25s ease
+    }
+
+    @keyframes tsi {
+      from {
+        opacity: 0;
+        transform: scale(.85)
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1)
+      }
+    }
+
+    .ts-ico {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      border: 1.5px solid var(--bdr);
+      background: var(--bg3);
+      transition: all .3s;
+      flex-shrink: 0
+    }
+
+    .ts-ico.on {
+      transform: scale(1.1)
+    }
+
+    .ts-ico.on::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 12px;
+      border: 1.5px solid currentColor;
+      opacity: .2;
+      animation: tp 1.2s ease-in-out infinite
+    }
+
+    @keyframes tp {
+
+      0%,
+      100% {
+        opacity: .08;
+        transform: scale(1)
+      }
+
+      50% {
+        opacity: .25;
+        transform: scale(1.05)
+      }
+    }
+
+    .ts-lbl {
+      font-size: 8.5px;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .7px;
+      color: var(--fg3);
+      margin-left: 6px;
+      white-space: nowrap
+    }
+
+    .ts-lbl b {
+      color: var(--fg2);
+      font-weight: 600;
+      display: block;
+      font-size: 9px
+    }
+
+    .ts-ico.c0 {
+      color: var(--ac)
+    }
+
+    .ts-ico.on.c0 {
+      border-color: var(--ac);
+      box-shadow: 0 0 20px var(--acG)
+    }
+
+    .ts-ico.c1 {
+      color: var(--pu)
+    }
+
+    .ts-ico.on.c1 {
+      border-color: var(--pu);
+      box-shadow: 0 0 20px var(--puG)
+    }
+
+    .ts-ico.c2 {
+      color: var(--rd)
+    }
+
+    .ts-ico.on.c2 {
+      border-color: var(--rd);
+      box-shadow: 0 0 20px var(--rdG)
+    }
+
+    .ts-ico.c3 {
+      color: var(--cy)
+    }
+
+    .ts-ico.on.c3 {
+      border-color: var(--cy);
+      box-shadow: 0 0 20px var(--cyG)
+    }
+
+    .ts-ico.c4 {
+      color: var(--ng)
+    }
+
+    .ts-ico.on.c4 {
+      border-color: var(--ng);
+      box-shadow: 0 0 20px var(--ngG)
+    }
+
+    .ts-ico.c5 {
+      color: var(--or)
+    }
+
+    .ts-ico.on.c5 {
+      border-color: var(--or);
+      box-shadow: 0 0 20px var(--orG)
+    }
+
+    .ts-ico.c6 {
+      color: var(--gn)
+    }
+
+    .ts-ico.on.c6 {
+      border-color: var(--gn);
+      box-shadow: 0 0 20px var(--gnG)
+    }
+
+    .ts-ico.fail {
+      border-color: var(--rd) !important;
+      box-shadow: 0 0 16px var(--rdG) !important;
+      animation: tfail .4s ease !important
+    }
+
+    @keyframes tfail {
+
+      0%,
+      100% {
+        transform: translateX(0)
+      }
+
+      20% {
+        transform: translateX(-4px)
+      }
+
+      40% {
+        transform: translateX(4px)
+      }
+
+      60% {
+        transform: translateX(-2px)
+      }
+
+      80% {
+        transform: translateX(2px)
+      }
+    }
+
+    .tl {
+      width: 20px;
+      height: 2px;
+      background: var(--bdr);
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+      margin: 0 2px
+    }
+
+    .tl.go::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--ac);
+      transform: translateX(-100%);
+      animation: tlg .5s ease forwards
+    }
+
+    @keyframes tlg {
+      to {
+        transform: translateX(0);
+        opacity: 0
+      }
+    }
+
+    /* GRID */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 16px
+    }
+
+    .card {
+      background: var(--bg3);
+      border: 1px solid var(--bdr);
+      border-radius: var(--r);
+      overflow: hidden
+    }
+
+    .chd {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--bdr);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11.5px;
+      font-weight: 600
+    }
+
+    .chd i {
+      font-size: 11px;
+      opacity: .4
+    }
+
+    .cb {
+      padding: 12px
+    }
+
+    /* CHAT */
+    .chat {
+      display: flex;
+      flex-direction: column
+    }
+
+    .msgs {
+      flex: 1;
+      min-height: 260px;
+      max-height: 380px;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--bdr) transparent
+    }
+
+    .msgs::-webkit-scrollbar {
+      width: 3px
+    }
+
+    .msgs::-webkit-scrollbar-thumb {
+      background: var(--bdr);
+      border-radius: 3px
+    }
+
+    .m {
+      display: flex;
+      gap: 7px;
+      animation: mi .2s ease
+    }
+
+    @keyframes mi {
+      from {
+        opacity: 0;
+        transform: translateY(4px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .ma {
+      width: 24px;
+      height: 24px;
+      border-radius: 5px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 700
+    }
+
+    .m.hu .ma {
+      background: var(--acG);
+      color: var(--ac);
+      border: 1px solid rgba(222, 165, 27, .2)
+    }
+
+    .m.ai .ma {
+      background: var(--puG);
+      color: var(--pu);
+      border: 1px solid rgba(168, 112, 240, .15)
+    }
+
+    .m.sy .ma {
+      background: var(--cyG);
+      color: var(--cy);
+      border: 1px solid rgba(72, 196, 232, .15)
+    }
+
+    .m.ok .ma {
+      background: var(--gnG);
+      color: var(--gn);
+      border: 1px solid rgba(56, 208, 128, .15)
+    }
+
+    .m.bl .ma {
+      background: var(--orG);
+      color: var(--or);
+      border: 1px solid rgba(232, 152, 48, .15)
+    }
+
+    .m.rf .ma {
+      background: var(--rdG);
+      color: var(--rd);
+      border: 1px solid rgba(232, 96, 90, .15)
+    }
+
+    .m.err .ma {
+      background: var(--rdG);
+      color: var(--rd);
+      border: 1px solid rgba(232, 96, 90, .15)
+    }
+
+    .mc {
+      flex: 1;
+      font-size: 12px;
+      line-height: 1.55
+    }
+
+    .mc .lb {
+      font-size: 8.5px;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      margin-bottom: 1px;
+      opacity: .35
+    }
+
+    .m.sy .mc {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      color: var(--cy)
+    }
+
+    .m.ok .mc {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      color: var(--gn)
+    }
+
+    .m.bl .mc {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      color: var(--or)
+    }
+
+    .m.rf .mc {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      color: var(--rd)
+    }
+
+    .m.err .mc {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      color: var(--rd)
+    }
+
+    .cin {
+      padding: 10px 14px;
+      border-top: 1px solid var(--bdr);
+      display: flex;
+      gap: 7px
+    }
+
+    .ci {
+      flex: 1;
+      background: var(--bg2);
+      border: 1.5px solid var(--bdr);
+      border-radius: 7px;
+      padding: 8px 11px;
+      color: var(--fg);
+      font-family: var(--sans);
+      font-size: 12.5px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s
+    }
+
+    .ci:focus {
+      border-color: var(--ac);
+      box-shadow: 0 0 0 3px var(--acG)
+    }
+
+    .ci::placeholder {
+      color: var(--fg4)
+    }
+
+    .ci:disabled {
+      opacity: .3
+    }
+
+    .cs {
+      width: 36px;
+      height: 36px;
+      border-radius: 7px;
+      border: none;
+      background: linear-gradient(135deg, var(--ac), var(--ac2));
+      color: var(--bg);
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform .1s, box-shadow .2s
+    }
+
+    .cs:hover:not(:disabled) {
+      transform: scale(1.08);
+      box-shadow: 0 0 18px var(--acG)
+    }
+
+    .cs:active:not(:disabled) {
+      transform: scale(.93)
+    }
+
+    .cs:disabled {
+      opacity: .25;
+      cursor: not-allowed
+    }
+
+    /* SIDEBAR */
+    .side {
+      display: flex;
+      flex-direction: column;
+      gap: 12px
+    }
+
+    /* WORKSPACE */
+    .ws {
+      font-family: var(--mono);
+      font-size: 10px;
+      line-height: 1.7
+    }
+
+    .ws-ph {
+      color: var(--fg4);
+      text-align: center;
+      padding: 6px 0;
+      font-size: 10.5px
+    }
+
+    .ws-ph i {
+      display: block;
+      font-size: 16px;
+      opacity: .15;
+      margin-bottom: 4px
+    }
+
+    .br {
+      padding: 3px 0;
+      display: flex;
+      gap: 6px;
+      align-items: flex-start;
+      animation: mi .2s ease
+    }
+
+    .br-id {
+      color: var(--fg4);
+      min-width: 52px;
+      flex-shrink: 0
+    }
+
+    .br-steps {
+      flex: 1
+    }
+
+    .br-step {
+      padding: 1px 0;
+      display: flex;
+      gap: 4px;
+      align-items: center
+    }
+
+    .br-step .dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      flex-shrink: 0
+    }
+
+    .br-step .dot.idle {
+      background: var(--fg4)
+    }
+
+    .br-step .dot.run {
+      background: var(--rd);
+      animation: bk .6s ease-in-out infinite
+    }
+
+    .br-step .dot.ok {
+      background: var(--gn)
+    }
+
+    .br-step .dot.fail {
+      background: var(--rd)
+    }
+
+    .br-step .txt {
+      color: var(--fg3)
+    }
+
+    .br-step .txt.ok {
+      color: var(--gn)
+    }
+
+    .br-step .txt.fail {
+      color: var(--rd)
+    }
+
+    .br-step .txt.run {
+      color: var(--fg2)
+    }
+
+    .br-step .tag {
+      font-size: 8.5px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-left: 4px
+    }
+
+    .br-step .tag.err {
+      background: var(--rdG);
+      color: var(--rd);
+      border: 1px solid rgba(232, 96, 90, .15)
+    }
+
+    .br-step .tag.ok {
+      background: var(--gnG);
+      color: var(--gn);
+      border: 1px solid rgba(56, 208, 128, .15)
+    }
+
+    .br-step .tag.add {
+      background: var(--orG);
+      color: var(--or);
+      border: 1px solid rgba(232, 152, 48, .15)
+    }
+
+    .ws-divider {
+      border: none;
+      border-top: 1px dashed var(--bdr);
+      margin: 6px 0
+    }
+
+    .ws-sub {
+      color: var(--fg4);
+      font-size: 9px;
+      margin: 4px 0 2px;
+      text-transform: uppercase;
+      letter-spacing: .5px
+    }
+
+    /* STREAM LOG */
+    .sl {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      line-height: 1.75;
+      max-height: 140px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--bdr) transparent
+    }
+
+    .sl::-webkit-scrollbar {
+      width: 2px
+    }
+
+    .sl::-webkit-scrollbar-thumb {
+      background: var(--bdr);
+      border-radius: 2px
+    }
+
+    .sll {
+      animation: sli .1s ease;
+      white-space: pre-wrap;
+      word-break: break-all
+    }
+
+    @keyframes sli {
+      from {
+        opacity: 0
+      }
+
+      to {
+        opacity: 1
+      }
+    }
+
+    .slt {
+      color: var(--fg4)
+    }
+
+    .slg {
+      font-weight: 600
+    }
+
+    .slg.gp {
+      color: var(--pu)
+    }
+
+    .slg.gb {
+      color: var(--rd)
+    }
+
+    .slg.gs {
+      color: var(--cy)
+    }
+
+    .slg.gn {
+      color: var(--ng)
+    }
+
+    .slg.gk {
+      color: var(--gn)
+    }
+
+    .slg.gh {
+      color: var(--ac)
+    }
+
+    .slg.gr {
+      color: var(--or)
+    }
+
+    .slg.gf {
+      color: var(--rd)
+    }
+
+    .slm {
+      color: var(--fg3)
+    }
+
+    /* GATE */
+    .gate {
+      min-height: 100px
+    }
+
+    .gp {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 90px;
+      color: var(--fg4);
+      font-size: 10.5px;
+      gap: 5px
+    }
+
+    .gp i {
+      font-size: 18px;
+      opacity: .15
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--bdr);
+      margin-bottom: 10px
+    }
+
+    .tab {
+      flex: 1;
+      padding: 7px 6px;
+      text-align: center;
+      font-size: 9.5px;
+      font-family: var(--mono);
+      color: var(--fg3);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all .2s;
+      text-transform: uppercase;
+      letter-spacing: .3px
+    }
+
+    .tab:hover {
+      color: var(--fg2)
+    }
+
+    .tab.on {
+      color: var(--ng);
+      border-bottom-color: var(--ng)
+    }
+
+    .tab .tab-dot {
+      display: inline-block;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      margin-right: 3px;
+      vertical-align: middle
+    }
+
+    .tab .tab-dot.idle {
+      background: var(--fg4)
+    }
+
+    .tab .tab-dot.done {
+      background: var(--gn)
+    }
+
+    .tab .tab-dot.revised {
+      background: var(--or)
+    }
+
+    .dp {
+      animation: gi .25s ease
+    }
+
+    @keyframes gi {
+      from {
+        opacity: 0;
+        transform: translateY(6px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .df {
+      margin-bottom: 6px
+    }
+
+    .df label {
+      display: block;
+      font-size: 8.5px;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      color: var(--fg4);
+      margin-bottom: 2px
+    }
+
+    .dv {
+      padding: 5px 7px;
+      background: var(--bg2);
+      border: 1px solid var(--bdr);
+      border-radius: var(--rs);
+      font-size: 11.5px;
+      color: var(--fg);
+      line-height: 1.4;
+      min-height: 26px
+    }
+
+    .dv.tp {
+      border-color: var(--cy);
+      background: linear-gradient(90deg, var(--bg2), rgba(72, 196, 232, .02), var(--bg2));
+      background-size: 200% 100%;
+      animation: tsh .9s ease infinite
+    }
+
+    @keyframes tsh {
+      0% {
+        background-position: 200% 0
+      }
+
+      100% {
+        background-position: -200% 0
+      }
+    }
+
+    .dv.tp::after {
+      content: '\2588';
+      animation: cb .45s step-end infinite;
+      color: var(--cy);
+      font-size: 9px
+    }
+
+    @keyframes cb {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0
+      }
+    }
+
+    .dv.revised {
+      border-color: rgba(232, 152, 48, .3);
+      background: rgba(232, 152, 48, .03)
+    }
+
+    .ga {
+      display: flex;
+      gap: 5px;
+      margin-top: 8px;
+      padding-top: 7px;
+      border-top: 1px solid var(--bdr)
+    }
+
+    .btn {
+      flex: 1;
+      padding: 6px 8px;
+      border-radius: var(--rs);
+      font-family: var(--sans);
+      font-size: 10.5px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px
+    }
+
+    .bok {
+      background: var(--gn);
+      color: var(--bg);
+      border-color: var(--gn)
+    }
+
+    .bok:hover:not(:disabled) {
+      box-shadow: 0 0 14px var(--gnG);
+      transform: translateY(-1px)
+    }
+
+    .brv {
+      background: transparent;
+      color: var(--or);
+      border-color: var(--bdr)
+    }
+
+    .brv:hover:not(:disabled) {
+      border-color: var(--or);
+      background: var(--orG)
+    }
+
+    .bno {
+      background: transparent;
+      color: var(--rd);
+      border-color: var(--bdr)
+    }
+
+    .bno:hover:not(:disabled) {
+      border-color: var(--rd);
+      background: var(--rdG)
+    }
+
+    .btn:disabled {
+      opacity: .15;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important
+    }
+
+    /* RISK RESULT */
+    .rr {
+      animation: gi .3s ease;
+      padding: 2px 0
+    }
+
+    .rr-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 0
+    }
+
+    .rr-ico {
+      width: 38px;
+      height: 38px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px
+    }
+
+    .rr-ico.pass {
+      background: var(--gnG);
+      border: 1px solid rgba(56, 208, 128, .18);
+      color: var(--gn)
+    }
+
+    .rr-ico.block {
+      background: var(--orG);
+      border: 1px solid rgba(232, 152, 48, .18);
+      color: var(--or)
+    }
+
+    .rr-ico.refuse {
+      background: var(--rdG);
+      border: 1px solid rgba(232, 96, 90, .18);
+      color: var(--rd)
+    }
+
+    .rr-t {
+      font-size: 11.5px;
+      font-weight: 700
+    }
+
+    .rr-s {
+      font-size: 9.5px;
+      color: var(--fg3);
+      font-family: var(--mono);
+      text-align: center;
+      line-height: 1.4;
+      max-width: 260px
+    }
+
+    .rr-box {
+      margin-top: 6px;
+      padding: 7px 9px;
+      background: var(--bg2);
+      border: 1px solid var(--bdr);
+      border-radius: var(--rs);
+      font-family: var(--mono);
+      font-size: 9.5px;
+      line-height: 1.55
+    }
+
+    .rr-box.block {
+      border-color: rgba(232, 152, 48, .15);
+      color: var(--or)
+    }
+
+    .rr-box.refuse {
+      border-color: rgba(232, 96, 90, .15);
+      color: var(--rd)
+    }
+
+    .rr-box .ri {
+      margin-right: 4px;
+      opacity: .5
+    }
+
+    .rr-metrics {
+      width: 100%;
+      margin-top: 6px
+    }
+
+    .rr-metric {
+      display: flex;
+      justify-content: space-between;
+      padding: 2px 0;
+      font-size: 9.5px;
+      font-family: var(--mono)
+    }
+
+    .rr-metric .ml {
+      color: var(--fg3)
+    }
+
+    .rr-metric .mv {
+      font-weight: 600
+    }
+
+    .rr-metric .mv.gn {
+      color: var(--gn)
+    }
+
+    .rr-metric .mv.or {
+      color: var(--or)
+    }
+
+    .rr-metric .mv.rd {
+      color: var(--rd)
+    }
+
+    /* STATUS */
+    .sb {
+      margin-top: 16px;
+      padding: 8px 12px;
+      background: var(--bg3);
+      border: 1px solid var(--bdr);
+      border-radius: var(--r);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      color: var(--fg3)
+    }
+
+    .sd {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--fg4);
+      flex-shrink: 0
+    }
+
+    .sd.idle {
+      background: var(--fg4)
+    }
+
+    .sd.act {
+      background: var(--ac);
+      animation: sp 1s ease-in-out infinite
+    }
+
+    .sd.dn {
+      background: var(--gn)
+    }
+
+    @keyframes sp {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .1
+      }
+    }
+
+    /* TOAST */
+    .tw {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 5px
+    }
+
+    .tst {
+      padding: 7px 12px;
+      border-radius: 6px;
+      font-size: 10.5px;
+      font-weight: 500;
+      animation: ti .2s ease, to .2s ease 2.8s forwards;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 5px 24px rgba(0, 0, 0, .5)
+    }
+
+    .tst.tok {
+      background: #122a18;
+      color: var(--gn);
+      border: 1px solid rgba(56, 208, 128, .12)
+    }
+
+    .tst.tno {
+      background: #2a1212;
+      color: var(--rd);
+      border: 1px solid rgba(232, 96, 90, .12)
+    }
+
+    .tst.tin {
+      background: #12202a;
+      color: var(--cy);
+      border: 1px solid rgba(72, 196, 232, .12)
+    }
+
+    .tst.tor {
+      background: #2a1e12;
+      color: var(--or);
+      border: 1px solid rgba(232, 152, 48, .12)
+    }
+
+    @keyframes ti {
+      from {
+        opacity: 0;
+        transform: translateY(6px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    @keyframes to {
+      to {
+        opacity: 0;
+        transform: translateY(-4px)
+      }
+    }
+
+    @media(max-width:980px) {
+      .grid {
+        grid-template-columns: 1fr
+      }
+
+      .ts-ico {
+        width: 30px;
+        height: 30px;
+        font-size: 11px
+      }
+
+      .ts-lbl {
+        font-size: 7.5px
+      }
+
+      .ts-lbl b {
+        font-size: 8px
+      }
+    }
+
+    @media(max-width:560px) {
+      .app {
+        padding: 10px 8px 32px
+      }
+    }
+
+    @media(prefers-reduced-motion:reduce) {
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="nz"></div>
+  <div class="app">
+    <header>
+      <div class="hl">
+        <div class="hi">Ag</div>
+        <div class="ht">
+          <h1>Where Humans Still File</h1><span>Agentic AI with Angular</span>
+        </div>
+      </div>
+      <div class="hb"><span class="d"></span>Agent Online</div>
+    </header>
+
+    <!-- DYNAMIC TRACE -->
+    <nav class="trace" id="trace" aria-label="Execution trace"></nav>
+
+    <div class="grid">
+      <div class="card chat">
+        <div class="chd"><i class="fas fa-comments"></i>Agent Interface</div>
+        <div class="msgs" id="msgs" role="log" aria-live="polite"></div>
+        <div class="cin">
+          <input class="ci" id="ci" type="text" placeholder='Type anything and press Enter...' aria-label="Chat input"
+            autocomplete="off">
+          <button class="cs" id="cs" aria-label="Send"><i class="fas fa-arrow-up"></i></button>
+        </div>
+      </div>
+      <aside class="side">
+        <div class="card">
+          <div class="chd"><i class="fas fa-code-branch"></i>Branch Workspace</div>
+          <div class="cb ws" id="ws">
+            <div class="ws-ph"><i class="fas fa-code-branch"></i>Waiting for execution...</div>
+          </div>
+        </div>
+        <div class="card" style="flex:1">
+          <div class="chd">
+            <div style="width:5px;height:5px;border-radius:50%;background:var(--cy);flex-shrink:0"></div>AG-UI Stream
+          </div>
+          <div class="cb">
+            <div class="sl" id="slog" role="log"></div>
+          </div>
+        </div>
+        <div class="card gate" id="gate">
+          <div class="chd">
+            <div
+              style="width:12px;height:12px;font-size:7px;border-radius:2px;background:var(--ng);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;flex-shrink:0">
+              A</div>Angular Gate
+          </div>
+          <div class="cb" id="gb">
+            <div class="gp"><i class="fas fa-shield-halved"></i><span>Waiting...</span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="sb">
+      <div class="sd idle" id="sd"></div><span id="stx">Idle</span><span style="margin-left:auto;opacity:.2">v3.0
+        realistic</span>
+    </div>
+  </div>
+  <div class="tw" id="tw"></div>
+
+  <script>
+    const $=id => document.getElementById(id);
+    const msgs=$('msgs'),ci=$('ci'),cs=$('cs'),slog=$('slog'),gb=$('gb'),ws=$('ws');
+    const sd=$('sd'),stx=$('stx'),trace=$('trace'),tw=$('tw');
+    let busy=false,done=false,riskIdx=0,activeTraceIdx=-1;
+
+    const W=ms => new Promise(r => setTimeout(r,ms));
+    function now() {const d=new Date(); return d.toTimeString().split(' ')[0]+'.'+String(d.getMilliseconds()).padStart(3,'0')}
+    function lg(tag,cls,msg) {const l=document.createElement('div'); l.className='sll'; l.innerHTML=`<span class="slt">${now()}</span> <span class="slg ${cls}">[${tag}]</span> <span class="slm">${msg}</span>`; slog.appendChild(l); slog.scrollTop=slog.scrollHeight}
+    function mg(type,text) {const av={hu: 'H',ai: 'AI',sy: '<i class="fas fa-terminal" style="font-size:8px"></i>',ok: '<i class="fas fa-check" style="font-size:8px"></i>',bl: '<i class="fas fa-lock" style="font-size:8px"></i>',rf: '<i class="fas fa-ban" style="font-size:8px"></i>',err: '<i class="fas fa-xmark" style="font-size:8px"></i>'}; const lb={hu: 'You',ai: 'Agent',sy: 'System',ok: 'Filed',bl: 'Blocked',rf: 'Refused',err: 'Error'}; const d=document.createElement('div'); d.className=`m ${type}`; d.innerHTML=`<div class="ma">${av[type]}</div><div class="mc"><div class="lb">${lb[type]}</div>${text}</div>`; msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight}
+    function toast(c,t,i) {const e=document.createElement('div'); e.className=`tst ${c}`; e.innerHTML=`<i class="fas fa-${i||'info-circle'}"></i>${t}`; tw.appendChild(e); setTimeout(() => e.remove(),3200)}
+    function setStatus(t,txt) {sd.className='sd '+t; stx.textContent=txt}
+
+    /* ── TRACE ── */
+    function addTrace(icon,label,cc) {
+      if(activeTraceIdx>=0) {const prev=trace.children[activeTraceIdx]; if(prev) {const ico=prev.querySelector('.ts-ico'); if(ico) ico.classList.remove('on')} }
+      const s=document.createElement('div'); s.className='ts';
+      if(trace.children.length>0) {const ln=document.createElement('div'); ln.className='tl'; trace.appendChild(ln); setTimeout(() => ln.classList.add('go'),30)}
+      s.innerHTML=`<div class="ts-ico c${cc}" style="position:relative"><i class="fas fa-${icon}"></i></div><div class="ts-lbl"><b>${label}</b></div>`;
+      trace.appendChild(s); trace.scrollLeft=trace.scrollWidth;
+      activeTraceIdx=trace.children.length-1;
+      const ico=s.querySelector('.ts-ico'); if(ico) ico.classList.add('on');
+      return ico;
+    }
+    function failTrace() {if(activeTraceIdx>=0) {const ico=trace.children[activeTraceIdx]?.querySelector('.ts-ico'); if(ico) ico.classList.add('fail')} }
+    function clearTrace() {trace.innerHTML=''; activeTraceIdx=-1}
+
+    /* ── WORKSPACE ── */
+    function wsHTML(lines) {ws.innerHTML=lines.map(l => {if(l==='---') return '<hr class="ws-divider">'; if(l.startsWith('##')) return `<div class="ws-sub">${l.slice(2)}</div>`; return `<div class="br">${l}</div>`}).join('')}
+
+    /* ── DOCUMENTS ── */
+    const docBank=[
+      [
+        {id: 'comp',tab: 'Compliance',title: 'Compliance Statement — Q4 Migration',summary: 'This organization certifies that the Q4 migration from monolith to microservices has been reviewed against applicable regulatory frameworks.',details: 'Scope: 3 production services. Frameworks: SOC 2 Type II, ISO 27001. Assessment period: Sept 1–28. Findings: 2 minor observations, 0 critical. Remediation timeline attached.',schema: 'SOC2-T2'},
+        {id: 'risk',tab: 'Risk Assessment',title: 'Risk Assessment — Service Decomposition',summary: 'Identification and evaluation of risks associated with breaking the authentication service from the monolith.',details: 'HIGH: Session state migration (mitigated: shared Redis cache). MEDIUM: API versioning conflicts (mitigated: header-based routing). LOW: Monitoring gap during cutover (mitigated: dual-write logging). Residual risk: LOW.',schema: 'ISO 31000'},
+        {id: 'xref',tab: 'Cross-Reference',title: 'Cross-Reference Report — Dependency Map',summary: 'Validation that all inter-service dependencies have been documented and no circular references exist.',details: 'Total dependencies: 14. Direct: 8. Transitive: 6. Circular: 0. External: 2 (Stripe, SendGrid). All dependencies version-pinned. Health check coverage: 100%.',schema: 'Internal-REF'}
+      ],[
+        {id: 'comp',tab: 'Compliance',title: 'Compliance Statement — Incident Response',summary: 'Certification that the Sept 28 auth outage response followed established IR procedures.',details: 'Detection: Automated (PagerDuty). Triage: 3 min. Containment: 12 min. Resolution: 47 min. Comms: StatusPage updated at +5 min. Post-incident review scheduled per IR-POL-004.',schema: 'NIST-800-61'},
+        {id: 'risk',tab: 'Risk Assessment',title: 'Risk Assessment — Certificate Management',summary: 'Analysis of risks stemming from the expired TLS certificate root cause.',details: 'ROOT: Manual cert renewal process. IMPACT: 12,400 users. LIKELIHOOD: High (annual occurrence). MITIGATION: cert-manager with 30-day auto-renewal. RESIDUAL: Very Low. Requires change request CR-4419.',schema: 'ISO 31000'},
+        {id: 'xref',tab: 'Cross-Reference',title: 'Cross-Reference — Related Incidents',summary: 'Cross-referencing against historical incidents with same root cause category.',details: 'Matching category: TLS/Certificate. Historical matches: 3 (INC-2019-044, INC-2021-089, INC-2023-012). Pattern: All occurred during manual rotation windows. Recommendation: Eliminate manual rotation.',schema: 'Internal-REF'}
+      ],[
+        {id: 'comp',tab: 'Compliance',title: 'Compliance Statement — Notification System',summary: 'Confirmation that the real-time notification architecture meets data residency and privacy requirements.',details: 'Regions: EU-West, US-East. Data at rest: AES-256. Data in transit: TLS 1.3. PII handling: Tokenized before event emission. Retention: 90 days auto-purge. GDPR Art.17 compliant.',schema: 'GDPR-Art5'},
+        {id: 'risk',tab: 'Risk Assessment',title: 'Risk Assessment — WebSocket Scaling',summary: 'Evaluation of scaling risks for the WebSocket notification delivery layer.',details: 'HIGH: Connection memory per client (~45KB). At 50K concurrent: ~2.2GB. MITIGATION: Sticky sessions + horizontal scaling via Redis pub/sub. MEDIUM: Backpressure on slow consumers. MITIGATION: Buffer + dead-letter queue.',schema: 'ISO 31000'},
+        {id: 'xref',tab: 'Cross-Reference',title: 'Cross-Reference — Event Schema Consistency',summary: 'Verification that all 14 event types conform to the shared event schema definition.',details: 'Checked against: event-schema v3.2. All 14 types: PASS. Field naming: camelCase consistent. Timestamps: ISO 8601 with timezone. Payload size: Max 4KB (all under). Version tagged.',schema: 'AsyncAPI-2.6'}
+      ]
+    ];
+
+    /* Revised risk assessment (used when human requests revision) */
+    const revisedRisk=[
+      'Risk Assessment — Service Decomposition (REVISED)',
+      'Updated risk evaluation with detailed threat vector analysis for the authentication service extraction.',
+      'HIGH: Session state migration during active user sessions — MITIGATED: Dual-write to shared Redis with 5-min sync window and automated reconciliation job. MEDIUM: API versioning conflicts between old monolith routes and new service endpoints — MITIGATED: Header-based routing with 30-day overlap period and canary deployment. LOW: Monitoring gap during cutover window — MITIGATED: Dual-write structured logs to both legacy and new ELK stacks with automated diff alerting. NEW: Token revocation propagation delay (~200ms) — ACCEPTED: Within SLA, documented in runbook. Residual risk: VERY LOW.'
+    ];
+
+    /* Risk gate outcomes */
+    const risks=[
+      {type: 'pass',icon: 'check',cls: 'pass',label: 'PASSED',detail: 'All checks passed. Package filed.',metrics: [{l: 'Confidence',v: '94%',c: 'gn'},{l: 'Completeness',v: '12/12 fields',c: 'gn'},{l: 'Classification',v: 'Standard',c: 'gn'},{l: 'Policy',v: 'Clear',c: 'gn'}],tc: 'tok',ti: 'check-circle',tm: 'Risk gate passed — filed'},
+      {type: 'block',icon: 'lock',cls: 'block',label: 'BLOCKED',detail: 'Missing approval. Returned for revision.',metrics: [{l: 'Confidence',v: '67%',c: 'or'},{l: 'Completeness',v: '10/12 fields',c: 'or'},{l: 'Classification',v: 'Elevated',c: 'or'},{l: 'Policy',v: 'FAIL: no sign-off',c: 'rd'}],reason: 'BLOCK REASON:\n> Missing: approved_by (supervisor sign-off)\n> Confidence 67% below 85% threshold\n> Classification elevated — requires L2 review\n> Action: revision request queued\n> Assigned: sarah.chen@company.com',tc: 'tor',ti: 'lock',tm: 'Blocked — missing approval'},
+      {type: 'refuse',icon: 'ban',cls: 'refuse',label: 'REFUSED',detail: 'Unverified input. Facts only.',metrics: [{l: 'Confidence',v: '31%',c: 'rd'},{l: 'Source',v: 'Unverified',c: 'rd'},{l: 'Classification',v: 'Flagged',c: 'rd'},{l: 'Policy',v: 'DENY treatment',c: 'rd'}],reason: 'REFUSE REASON:\n> Input source: unverified third-party claim\n> Policy GATE-007: facts-only for unverified\n> No document generated\n> No treatment applied\n> Raw data logged: audit-trail/AUD-8841\n> Incident created: INC-auto-4402',tc: 'tno',ti: 'ban',tm: 'Refused — facts only'}
+    ];
+
+    /* ══════════════════════════════════════
+       THE REALISTIC LOOP
+       ══════════════════════════════════════ */
+    async function run(input) {
+      if(busy||done) return;
+      busy=true; cs.disabled=true; ci.disabled=true;
+      clearTrace(); slog.innerHTML=''; gb.innerHTML='<div class="gp"><i class="fas fa-shield-halved"></i><span>Waiting...</span></div>';
+
+      const docs=docBank[Math.floor(Math.random()*docBank.length)];
+      const risk=risks[riskIdx%3]; riskIdx++;
+
+      /* ── 1. HUMAN ── */
+      mg('hu',input);
+      addTrace('user','Request',0);
+      setStatus('act','Human: request received');
+      lg('HUMAN','gh',`"${input}"`);
+      lg('HUMAN','gh','trace_id=tr-'+Math.random().toString(36).slice(2,8));
+      await W(500);
+
+      /* ── 2. AGENT PLAN ── */
+      addTrace('brain','Plan',1);
+      setStatus('act','Agent: LLM planning...');
+      lg('AGENT','gp','model=gpt-4o tokens_in='+input.length);
+      lg('AGENT','gp','reasoning: intent=prepare_compliance_package');
+      mg('sy','Agent analyzing input and building execution plan...');
+      await W(300);
+
+      ws.innerHTML=`
+    <div class="ws-sub">Execution Plan</div>
+    <div class="br"><span class="br-id" style="color:var(--pu)">1.</span><span style="color:var(--fg2)">Identify required documents (3 needed)</span></div>
+    <div class="br"><span class="br-id" style="color:var(--pu)">2.</span><span style="color:var(--fg2)">Execute branches in parallel</span></div>
+    <div class="br"><span class="br-id" style="color:var(--pu)">3.</span><span style="color:var(--fg2)">Merge results, stream to frontend</span></div>
+    <div class="br"><span class="br-id" style="color:var(--pu)">4.</span><span style="color:var(--fg2)">Human review gate</span></div>
+    <div class="br"><span class="br-id" style="color:var(--pu)">5.</span><span style="color:var(--fg2)">Risk gate evaluation</span></div>`;
+      await W(600);
+      mg('ai','Plan: generate <strong>3 documents</strong> in <strong>parallel branches</strong>, merge, stream to Angular for review.');
+      await W(350);
+
+      /* ── 3. PARALLEL EXECUTE (with failure on Branch C) ── */
+      addTrace('code-branch','Execute',2);
+      setStatus('act','Backend: parallel execution...');
+      lg('BACKEND','gb','dispatch: 3 branches parallel');
+
+      // Initialize workspace branches
+      ws.innerHTML=`
+    <div class="ws-sub">Branch A — Compliance</div>
+    <div class="br" id="ba"><span class="br-id" style="color:var(--fg4)">A</span><span class="br-steps" id="bas"></span></div>
+    <div class="ws-sub">Branch B — Risk Assessment</div>
+    <div class="br" id="bb"><span class="br-id" style="color:var(--fg4)">B</span><span class="br-steps" id="bbs"></span></div>
+    <div class="ws-sub">Branch C — Cross-Reference</div>
+    <div class="br" id="bc"><span class="br-id" style="color:var(--fg4)">C</span><span class="br-steps" id="bcs"></span></div>`;
+
+      const bas=$('bas'),bbs=$('bbs'),bcs=$('bcs');
+
+      // Branch A: parse → draft → done
+      addBrStep(bas,'document_parser','run'); lg('BRANCH-A','gb','exec document_parser'); await W(400);
+      addBrStep(bas,'document_parser','ok','247 tokens'); lg('BRANCH-A','gk','parser → 4 fields'); await W(200);
+      addBrStep(bas,'content_drafter','run'); lg('BRANCH-A','gb','exec content_drafter target=compliance'); await W(500);
+      addBrStep(bas,'content_drafter','ok','compliance_statement'); lg('BRANCH-A','gk','drafter → compliance_statement ready'); await W(150);
+
+      // Branch B: parse → draft → done
+      addBrStep(bbs,'document_parser','run'); lg('BRANCH-B','gb','exec document_parser'); await W(350);
+      addBrStep(bbs,'document_parser','ok','247 tokens'); lg('BRANCH-B','gk','parser → 4 fields'); await W(180);
+      addBrStep(bbs,'content_drafter','run'); lg('BRANCH-B','gb','exec content_drafter target=risk_assessment'); await W(500);
+      addBrStep(bbs,'content_drafter','ok','risk_assessment'); lg('BRANCH-B','gk','drafter → risk_assessment ready'); await W(150);
+
+      // Branch C: cross_ref → FAILS
+      addBrStep(bcs,'cross_reference','run'); lg('BRANCH-C','gb','exec cross_reference_checker'); await W(500);
+
+      // FAILURE
+      failTrace();
+      addBrStep(bcs,'cross_reference','fail','AMBIGUOUS_ENTITY_MATCH');
+      lg('BRANCH-C','gf','ERROR: AMBIGUOUS_ENTITY_MATCH');
+      lg('BRANCH-C','gf','detail: "3 matches for Q4 Migration — cannot resolve primary"');
+      lg('BRANCH-C','gf','confidence: 0.42');
+      mg('err','Branch C <strong>failed</strong>: <code>AMBIGUOUS_ENTITY_MATCH</code> — 3 entity matches, confidence 0.42');
+      toast('tno','Branch C failed: AMBIGUOUS_ENTITY_MATCH','xmark-circle');
+      await W(700);
+
+      /* ── 4. AGENT ADAPTS + RECOVERS ── */
+      addTrace('rotate','Recover',5);
+      setStatus('act','Agent: adapting plan...');
+      lg('AGENT','gp','observed: branch_c failure');
+      lg('AGENT','gp','reasoning: need entity disambiguation before retry');
+      mg('ai','Branch C failed. <strong>Adapting plan</strong> — adding <code>disambiguation_tool</code> to resolve entity match, then retrying cross-reference.');
+      await W(300);
+
+      // Add recovery steps to Branch C in workspace
+      addBrStep(bcs,'disambiguate','add','NEW TOOL');
+      addBrStep(bcs,'disambiguate','run');
+      lg('AGENT','gp','tool_added: disambiguation_tool (adaptive)');
+      lg('BACKEND','gb','exec disambiguation_tool candidates=3');
+      await W(500);
+      addBrStep(bcs,'disambiguate','ok','resolved → "Q4 Microservices Migration"');
+      lg('BACKEND','gk','disambiguate → resolved to primary entity');
+      await W(200);
+
+      addBrStep(bcs,'cross_reference','run','RETRY');
+      lg('BACKEND','gb','exec cross_reference_checker retry=true entity="Q4 Microservices Migration"');
+      await W(450);
+      addBrStep(bcs,'cross_reference','ok','xref_report');
+      lg('BACKEND','gk','cross_reference → xref_report ready');
+      mg('sy','Branch C <strong>recovered</strong>. All 3 documents ready. Merging...');
+      toast('tin','Branch C recovered','check-circle');
+      await W(400);
+
+      /* ── 5. STREAM ── */
+      addTrace('bolt','Stream',3);
+      setStatus('act','AG-UI: streaming package...');
+      lg('AG-UI','gs','event: package-start docs=3');
+      await W(100); lg('AG-UI','gs','event: doc-stream compliance_statement'); await W(80);
+      lg('AG-UI','gs','event: doc-stream risk_assessment'); await W(80);
+      lg('AG-UI','gs','event: doc-stream xref_report'); await W(80);
+      lg('AG-UI','gs','event: package-complete');
+      lg('AG-UI','gs','event: please-confirm required=true');
+      await W(250);
+
+      /* ── 6. ANGULAR GATE (tabs) ── */
+      addTrace('shield-halved','Review',4);
+      setStatus('act','Angular: render gate — 3 documents');
+      lg('ANGULAR','gn','changeDetection → gate.component');
+      lg('ANGULAR','gn','Rendering 3 document tabs');
+
+      let activeTab=0;
+      gb.innerHTML=`
+    <div class="dp">
+      <div class="tabs" id="tabs">
+        <div class="tab on" data-t="0"><span class="tab-dot idle"></span>${docs[0].tab}</div>
+        <div class="tab" data-t="1"><span class="tab-dot idle"></span>${docs[1].tab}</div>
+        <div class="tab" data-t="2"><span class="tab-dot idle"></span>${docs[2].tab}</div>
+      </div>
+      <div id="tabContent"></div>
+      <div class="ga">
+        <button class="btn brv" id="brv" disabled><i class="fas fa-pen"></i> Request Revision</button>
+        <button class="btn bok" id="bok" disabled><i class="fas fa-check"></i> Confirm All</button>
+      </div>
+    </div>`;
+
+      const tabs=$('tabs'),tabContent=$('tabContent'),brvBtn=$('brv'),bokBtn=$('bok');
+
+      function renderTab(idx,isRevised) {
+        const d=isRevised? {title: revisedRisk[0],summary: revisedRisk[1],details: revisedRisk[2],schema: docs[idx].schema}:docs[idx];
+        tabContent.innerHTML=`
+      <div class="df"><label>Title</label><div class="dv tp${isRevised? ' revised':''}" id="tf0"></div></div>
+      <div class="df"><label>Summary</label><div class="dv tp${isRevised? ' revised':''}" id="tf1"></div></div>
+      <div class="df"><label>Details</label><div class="dv tp${isRevised? ' revised':''}" id="tf2"></div></div>
+      <div class="df"><label>Schema</label><div class="dv" id="tf3" style="color:var(--gn)"></div></div>`;
+        return typFields(d,isRevised);
+      }
+
+      async function typFields(d,rev) {
+        await typF('tf0',d.title,18); await typF('tf1',d.summary,10); await typF('tf2',d.details,7);
+        const f3=$('tf3'); if(f3) f3.innerHTML=`<i class="fas fa-circle-check" style="margin-right:3px"></i>${d.schema}`;
+      }
+
+      async function typF(id,text,spd) {const el=$(id); if(!el) return; for(let i=0;i<text.length;i++) {el.textContent+=text[i]; await W(spd)} el.classList.remove('tp')}
+
+      // Tab clicking
+      let docStates=[{done: false,rev: false},{done: false,rev: false},{done: false,rev: false}];
+
+      tabs.addEventListener('click',e => {
+        const t=e.target.closest('.tab'); if(!t||busy) return;
+        const idx=parseInt(t.dataset.t);
+        tabs.querySelectorAll('.tab').forEach((tt,i) => {tt.classList.toggle('on',i===idx)});
+        activeTab=idx;
+        renderTab(idx,docStates[idx].rev);
+      });
+
+      // Type out first tab
+      await renderTab(0,false);
+      const dot0=tabs.children[0].querySelector('.tab-dot'); if(dot0) dot0.className='tab-dot done';
+      docStates[0].done=true;
+
+      // Pre-type other tabs (fast, in background)
+      for(let i=1;i<3;i++) {
+        await W(100);
+        const dot=tabs.children[i].querySelector('.tab-dot'); if(dot) dot.className='tab-dot done';
+        docStates[i].done=true;
+      }
+
+      brvBtn.disabled=false; bokBtn.disabled=false;
+      mg('ai','3 documents rendered. Review each tab, then <strong>Confirm All</strong> or <strong>Request Revision</strong> on the active document.');
+
+      /* ── 7. AUTO-REVISION (simulates human finding an issue) ── */
+      await W(1800);
+
+      // Auto-switch to Risk Assessment tab and request revision
+      activeTab=1;
+      tabs.querySelectorAll('.tab').forEach((tt,i) => {tt.classList.toggle('on',i===1)});
+      await renderTab(1,false);
+      await W(300);
+
+      mg('hu','The Risk Assessment threat vectors are too vague. Revise with more detail.');
+      lg('GATE','gn','human_action: request_revision doc=risk_assessment');
+      lg('GATE','gn','feedback: "threat vectors too vague"');
+      await W(300);
+
+      // Agent re-generates ONLY the risk assessment
+      addTrace('pen','Revise',1);
+      setStatus('act','Agent: revising Risk Assessment only...');
+      lg('AGENT','gp','reasoning: revision requested on risk_assessment only');
+      lg('AGENT','gp','action: re-run content_drafter target=risk_assessment with additional detail');
+      mg('ai','Re-generating <strong>only</strong> the Risk Assessment with expanded threat vectors. Other documents unchanged.');
+      await W(400);
+
+      await renderTab(1,true);
+      const dot1=tabs.children[1].querySelector('.tab-dot'); if(dot1) dot1.className='tab-dot revised';
+      docStates[1].rev=true;
+      lg('BACKEND','gk','content_drafter → risk_assessment REVISED (312 tokens)');
+      toast('tin','Risk Assessment revised','pen');
+      mg('sy','Risk Assessment revised. Angular re-rendered the tab with updated content.');
+
+      await W(1200);
+
+      /* ── 8. HUMAN CONFIRMS ── */
+      mg('hu','Looks good. Confirm all.');
+      lg('GATE','gn','human_action: confirm_all=true');
+      brvBtn.disabled=true; bokBtn.disabled=true;
+      bokBtn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Checking...';
+      await W(300);
+
+      /* ── 9. RISK GATE ── */
+      addTrace('triangle-exclamation','Risk Gate',5);
+      setStatus('act','Risk gate: evaluating package...');
+      lg('RISK','gr','evaluating package (3 docs)...'); await W(250);
+      lg('RISK','gr','check: confidence_score → '+risk.metrics[0].v); await W(200);
+      lg('RISK','gr','check: completeness → '+risk.metrics[1].v); await W(200);
+      lg('RISK','gr','check: classification → '+risk.metrics[2].v); await W(200);
+      lg('RISK','gr','check: policy → '+risk.metrics[3].v); await W(200);
+      lg('RISK','gr','result: '+risk.type.toUpperCase()); await W(300);
+
+      // Render risk result
+      const dp=gb.querySelector('.dp'); if(dp) dp.remove();
+      const rr=document.createElement('div'); rr.className='rr';
+      let rhtml=`<div class="rr-center">
+    <div class="rr-ico ${risk.cls}"><i class="fas fa-${risk.icon}"></i></div>
+    <div class="rr-t" style="color:var(--${risk.cls==='pass'? 'gn':risk.cls==='block'? 'or':'rd'})">Risk Gate: ${risk.label}</div>
+    <div class="rr-s">${risk.detail}</div>
+    <div class="rr-metrics">${risk.metrics.map(m => `<div class="rr-metric"><span class="ml">${m.l}</span><span class="mv ${m.c}">${m.v}</span></div>`).join('')}</div>`;
+      if(risk.reason) rhtml+=`<div class="rr-box ${risk.cls}"><pre style="margin:0;white-space:pre-wrap;font-family:inherit">${risk.reason.split('\n').map(l => `<span class="ri">\u203A</span> ${l}`).join('<br>')}</pre></div>`;
+      rhtml+=`<button class="btn bok" style="margin-top:10px;flex:none;padding:6px 16px" onclick="resetLoop()"><i class="fas fa-rotate-right"></i> New Loop</button></div>`;
+      rr.innerHTML=rhtml; gb.appendChild(rr);
+
+      /* ── 10. POST-FILING ── */
+      if(risk.type==='pass') {
+        addTrace('check-double','Filed',6);
+        lg('POST','gk','audit_trail: AUD-'+Math.random().toString(36).slice(2,8).toUpperCase());
+        lg('POST','gk','notification: sent to compliance@company.com');
+        lg('POST','gk','webhook: triggered downstream archive');
+        mg('ok','Filed. Audit trail logged. Notification sent. Downstream archive triggered.');
+        setStatus('dn','Filed + audit + notification');
+      } else if(risk.type==='block') {
+        lg('POST','gr','revision_request: queued → sarah.chen@company.com');
+        lg('POST','gr','document_status: returned_to_draft');
+        mg('bl','Revision request queued to supervisor. Document returned to draft.');
+        setStatus('idle','Blocked — revision queued');
+      } else {
+        lg('POST','gf','incident: INC-auto-'+Math.floor(4000+Math.random()*1000));
+        lg('POST','gf','audit: raw data logged only. No document. No treatment.');
+        mg('rf','Incident auto-created. Raw facts logged to audit trail. No document generated.');
+        setStatus('idle','Refused — incident created');
+      }
+      toast(risk.tc,risk.tm,risk.ti);
+      done=true; busy=false;
+    }
+
+    function addBrStep(container,name,state,tag) {
+      const s=document.createElement('div'); s.className='br-step';
+      const dotCls=state==='run'? 'run':state==='ok'? 'ok':state==='fail'? 'fail':'idle';
+      const txtCls=state==='ok'? 'ok':state==='fail'? 'fail':state==='run'? 'run':'';
+      let tagHTML='';
+      if(tag) {
+        const tc=state==='fail'? 'err':state==='ok'? 'ok':'add';
+        tagHTML=`<span class="tag ${tc}">${tag}</span>`;
+      }
+      s.innerHTML=`<span class="dot ${dotCls}"></span><span class="txt ${txtCls}">${name}</span>${tagHTML}`;
+      container.appendChild(s);
+    }
+
+    function resetLoop() {
+      busy=false; done=false; cs.disabled=false; ci.disabled=false; ci.focus();
+      clearTrace(); setStatus('idle','Idle'); msgs.innerHTML=''; slog.innerHTML='';
+      gb.innerHTML='<div class="gp"><i class="fas fa-shield-halved"></i><span>Waiting...</span></div>';
+      ws.innerHTML='<div class="ws-ph"><i class="fas fa-code-branch"></i>Waiting for execution...</div>';
+      lg('SYS','gs','Loop reset');
+    }
+
+    /* ── INPUT ── */
+    function send() {const v=ci.value.trim(); if(!v||busy||done) return; ci.value=''; run(v)}
+    cs.addEventListener('click',send);
+    ci.addEventListener('keydown',e => {if(e.key==='Enter'&&!e.shiftKey) {e.preventDefault(); send()} });
+
+    /* ── AUTO-DEMO ── */
+    lg('SYS','gs','Agent initialized. Trace ID: tr-'+Math.random().toString(36).slice(2,8));
+    lg('MCP','gb','tools: document_parser, content_drafter, schema_validator, cross_reference_checker');
+    lg('AG-UI','gn','Stream bound. Angular gate armed.');
+    lg('RISK','gr','Risk gate: pass/block/refuse modes active');
+    mg('sy','Agent ready. Type anything or wait for auto-demo...');
+
+    setTimeout(() => {
+      if(!busy&&!done) {
+        ci.value='Help me prepare this.';
+        ci.style.borderColor='var(--ac)'; ci.style.boxShadow='0 0 0 3px var(--acG)';
+        setTimeout(() => {ci.style.borderColor=''; ci.style.boxShadow=''; send()},800);
+      }
+    },1500);
+  </script>
+</body>
+
+</html>

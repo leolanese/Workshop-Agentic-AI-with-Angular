@@ -149,6 +149,32 @@
       animation: bk 2s ease-in-out infinite
     }
 
+    .emoji-strip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: -10px 0 22px;
+      color: var(--fg2);
+      font-size: 17px
+    }
+
+    .emoji-strip span {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border: 1px solid var(--bdr);
+      border-radius: 8px;
+      background: var(--bg3);
+      transition: transform .2s ease, border-color .2s ease
+    }
+
+    .emoji-strip span:hover {
+      transform: translateY(-3px) rotate(-4deg);
+      border-color: var(--ac)
+    }
+
     @keyframes bk {
 
       0%,
@@ -1259,36 +1285,46 @@
       <div class="hb"><span class="d"></span>Agent Online</div>
     </header>
 
+    <div class="emoji-strip" aria-label="Agent signals">
+      <span title="Human input">🙋</span>
+      <span title="Agent reasoning">🧠</span>
+      <span title="Backend tools">🛠️</span>
+      <span title="Live stream">⚡</span>
+      <span title="Angular render">🅰️</span>
+      <span title="Risk gate">🛡️</span>
+      <span title="Ready">🚀</span>
+    </div>
+
     <!-- PIPELINE: 6 nodes -->
     <nav class="pipe" id="pipe" aria-label="Agent pipeline">
       <div class="pn">
         <div class="pi ch" id="p0"><i class="fas fa-user"></i></div>
-        <div class="plbl"><b>Human</b><span>Request</span></div>
+        <div class="plbl"><b>🙋 Human</b><span>Request</span></div>
       </div>
       <div class="pc" id="c0"></div>
       <div class="pn">
         <div class="pi pl" id="p1"><i class="fas fa-brain"></i></div>
-        <div class="plbl"><b>Agent</b><span>Plan LLM</span></div>
+        <div class="plbl"><b>🧠 Agent</b><span>Plan LLM</span></div>
       </div>
       <div class="pc" id="c1"></div>
       <div class="pn">
         <div class="pi be" id="p2"><i class="fas fa-server"></i></div>
-        <div class="plbl"><b>Backend</b><span>MCP + Services</span></div>
+        <div class="plbl"><b>🛠️ Backend</b><span>MCP + Services</span></div>
       </div>
       <div class="pc" id="c2"></div>
       <div class="pn">
         <div class="pi st" id="p3"><i class="fas fa-bolt"></i></div>
-        <div class="plbl"><b>AG-UI</b><span>Stream</span></div>
+        <div class="plbl"><b>⚡ AG-UI</b><span>Stream</span></div>
       </div>
       <div class="pc" id="c3"></div>
       <div class="pn">
         <div class="pi ng" id="p4"><i class="fas fa-shield-halved"></i></div>
-        <div class="plbl"><b>Angular</b><span>Render Gate</span></div>
+        <div class="plbl"><b>🅰️ Angular</b><span>Render Gate</span></div>
       </div>
       <div class="pc" id="c4"></div>
       <div class="pn">
         <div class="pi rg" id="p5"><i class="fas fa-triangle-exclamation"></i></div>
-        <div class="plbl"><b>Risk Gate</b><span>Pass/Block/Refuse</span></div>
+        <div class="plbl"><b>🛡️ Risk Gate</b><span>Pass/Block/Refuse</span></div>
       </div>
     </nav>
 
@@ -1407,7 +1443,7 @@
     }
 
     function mg(type,text) {
-      const av={hu: 'H',ai: 'AI',sy: '<i class="fas fa-terminal" style="font-size:9px"></i>',ok: '<i class="fas fa-check" style="font-size:9px"></i>',bl: '<i class="fas fa-lock" style="font-size:9px"></i>',rf: '<i class="fas fa-ban" style="font-size:9px"></i>'};
+      const av={hu: '🙋',ai: '🤖',sy: '⚙️',ok: '✅',bl: '⛔',rf: '🚫'};
       const lb={hu: 'You',ai: 'Agent',sy: 'System',ok: 'Filed',bl: 'Blocked',rf: 'Refused'};
       const d=document.createElement('div'); d.className=`m ${type}`;
       d.innerHTML=`<div class="ma">${av[type]}</div><div class="mc"><div class="lb">${lb[type]}</div>${text}</div>`;
@@ -1438,7 +1474,7 @@
     function setStatus(t,txt) {sd.className='sd '+t; stx.textContent=txt}
 
     /* ── Plan display ── */
-    const planSteps=['Parse raw input structure','Select MCP tools (3 needed)','Execute deterministic pipeline','Stream results via AG-UI','Render in Angular for review','Run risk gate before filing'];
+    const planSteps=['📥 Parse raw input structure','🧰 Select MCP tools (3 needed)','⚙️ Execute deterministic pipeline','📡 Stream results via AG-UI','🖥️ Render in Angular for review','🛡️ Run risk gate before filing'];
     function showPlan(activeIdx) {
       planPH.style.display='none'; planBox.classList.add('v');
       planBox.innerHTML=planSteps.map((s,i) =>
@@ -1484,12 +1520,12 @@
 
       /* ── 1. HUMAN ── */
       mg('hu',input);
-      setPipe(0); setStatus('act','Human: request received');
+      setPipe(0); setStatus('act','🙋 Human: request received');
       lg('HUMAN','gh',`"${input}"`);
       await W(450);
 
       /* ── 2. AGENT PLAN (LLM) ── */
-      setPipe(1); setStatus('act','Agent: LLM planning...');
+      setPipe(1); setStatus('act','🧠 Agent: LLM planning...');
       lg('AGENT','gp','reasoning: intent=prepare_document');
       mg('sy','Agent is planning the execution sequence...');
       await W(350);
@@ -1505,7 +1541,7 @@
       await W(350);
 
       /* ── 3. BACKEND: MCP + domain services ── */
-      setPipe(2); setStatus('act','Backend: executing MCP tools...');
+      setPipe(2); setStatus('act','🛠️ Backend: executing MCP tools...');
       lg('MCP','gb','tool_selection intent=prepare');
       ap.classList.add('v');
 
@@ -1525,7 +1561,7 @@
       await W(250);
 
       /* ── 4. AG-UI STREAM ── */
-      setPipe(3); setStatus('act','AG-UI: streaming to frontend...');
+      setPipe(3); setStatus('act','⚡ AG-UI: streaming to frontend...');
       lg('AG-UI','gs','event: text-stream-start'); await W(120);
       lg('AG-UI','gs','event: tool-result document_parser'); await W(100);
       lg('AG-UI','gs','event: tool-result content_drafter'); await W(100);
@@ -1534,7 +1570,7 @@
       lg('AG-UI','gs','event: please-confirm required=true'); await W(200);
 
       /* ── 5. ANGULAR: RENDER + ASK ── */
-      setPipe(4); setStatus('act','Angular: render gate — awaiting human confirm');
+      setPipe(4); setStatus('act','🅰️ Angular: render gate — awaiting human confirm');
       lg('ANGULAR','gn','changeDetection → render-gate');
       lg('ANGULAR','gn','Gate OPEN — confirm required');
 
@@ -1575,7 +1611,7 @@
       if(bok) bok.innerHTML='<i class="fas fa-spinner fa-spin"></i> Checking...';
 
       mg('sy','Human confirmed. Sending to <strong>risk gate</strong> on backend...');
-      setPipe(5); setStatus('act','Risk gate: evaluating...');
+      setPipe(5); setStatus('act','🛡️ Risk gate: evaluating...');
       lg('RISK','gr','received: confirm=true → evaluating');
       await W(400);
       lg('RISK','gr','check: confidence_score'); await W(300);
