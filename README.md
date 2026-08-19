@@ -1,4 +1,4 @@
-﻿# 🤖 Workshop: Agentic AI with Angular: Where Humans Still File
+﻿# 🤖 Workshop: `Agentic AI with Angular`: Where Humans Still File
 
 ## 🚀 DEMO 1
 ![Demo screen 1](demo_1.png)
